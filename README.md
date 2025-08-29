@@ -141,7 +141,7 @@ clipvault delete --index -1 # Delete the oldest entry
 #### Delete all entries
 
 ```sh
-cliphist clear
+clipvault clear
 ```
 
 Alternatively, just delete the database file (default path can be found in `help` output).

@@ -1,0 +1,21 @@
+name: Audit dependencies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'
+  push:
+      branches: ["main"]
+  pull_request:
+      branches: ["main"]
+
+jobs:
+  security_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: taiki-e/install-action@cargo-audit
+
+      - name: Audit
+        run: cargo audit

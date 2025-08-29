@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Full `rofi` wrapper, including image preview.
+# Usage: rofi -modi clipboard:/path/to/clipvault_rofi.sh -show clipboard -show-icons
+
+rofi_list()
+{
+    tmp_dir="${XDG_CACHE_HOME:-$HOME/.cache}/clipvault/thumbs"
+    rm -rf "$tmp_dir"
+    mkdir -p "$tmp_dir"
+
+    # Generates thumbnails (for matched image formats) and returns entries with the ID column hidden
+    # in the `$ROFI_INFO` variable.
+    read -r -d '' prog << EOF
+/^[0-9]+\s<meta http-equiv=/ { next }
+match(\$0, /^([0-9]+)\s(\[\[\sbinary.*(jpg|jpeg|png|bmp|webp|tif|gif).*)/, grp) {
+    image = grp[1]"."grp[3]
+    system("echo " grp[1] " | clipvault get >$tmp_dir/"image)
+    print grp[2]"\000icon\037$tmp_dir/"image"\037info\037"grp[1]"\n"
+    next
+}
+match(\$0, /^([0-9]+)\s(.*)/, grp) {
+    print grp[2]"\000info\037"grp[1]"\n"
+    next
+}
+1
+EOF
+
+    clipvault list | gawk "$prog"
+}
+
+case $ROFI_RETV in
+    # Display entries on startup
+    0)
+        echo -en "\000use-hot-keys\037true\n" # Enable custom keys
+        rofi_list
+        ;;
+    # Handle regular select (kb-accept-entry, default <Enter>)
+    1)
+        if [ ! "$ROFI_INFO" = "" ]; then
+            clipvault get "$ROFI_INFO" | wl-copy
+        fi
+        exit
+        ;;
+    # Handle entry deletion (kb-delete-entry, default <S-Enter>)
+    3)
+        if [ ! "$ROFI_INFO" = "" ]; then
+            clipvault delete "$ROFI_INFO"
+        fi
+        rofi_list
+        ;;
+    # Handle a custom keybind (kb-custom-1) - delete all entries
+    # For more about custom rofi keybinds, see <https://davatorium.github.io/rofi/current/rofi-keys.5>
+    10)
+        clipvault clear
+        ;;
+    # Notify of unhandled keybind return value
+    *) notify-send "Clipboard: unhandled rofi return value $ROFI_RETV" ;;
+
+        # Alternatively, just ignore unhandled keybinds
+        # *) ;;
+esac

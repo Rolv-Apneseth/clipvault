@@ -1,0 +1,52 @@
+[package]
+name = "clipvault"
+description = "Clipboard history manager for Wayland, inspired by cliphist"
+version = "1.0.0"
+edition = "2024"
+repository = "https://github.com/rolv-apneseth/clipvault"
+homepage = "https://github.com/rolv-apneseth/clipvault"
+authors = ["Rolv Apneseth <rolv.apneseth@gmail.com>"]
+rust-version = "1.88"
+license = "AGPL-3.0"
+include = ["/src"]
+keywords = ["clipboard", "clipboard-history", "clipboard-manager"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+miette = { version = "7.6", features = ["fancy"] }
+
+clap = { version = "4.5", features = ["derive", "env"] }
+argfile = { version = "0.2" }
+dirs = { version = "6.0" }
+humantime = { version = "2.2" }
+
+# MIME types
+image = "0.25"
+mime-sniffer = "0.1"
+content_inspector = "0.2"
+
+# Database
+rusqlite = { version = "0.37", features = ["bundled", "extra_check"] }
+rusqlite_migration = { version = "2.3", features = ["from-directory"] }
+include_dir = { version = "0.7" }
+
+# Logging
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = { version = "0.2" }
+
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+assert_cmd = "2.0"
+predicates = "3.0"
+base64 = "0.22"
+tempfile = "3.21"
+proptest = "1.7"
+insta = "1.43"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1

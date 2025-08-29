@@ -1,0 +1,34 @@
+---
+source: src/database/mod.rs
+expression: MIGRATIONS
+---
+LazyLock(
+    Migrations {
+        ms: [
+            M {
+                up: "CREATE TABLE IF NOT EXISTS clipboard\n(\n    id integer PRIMARY KEY,\n    content blob NOT NULL UNIQUE,\n    last_updated integer NOT NULL\n) STRICT ;\n",
+                up_hook: None,
+                down: Some(
+                    "DROP TABLE IF EXISTS clipboard CASCADE;\n",
+                ),
+                down_hook: None,
+                foreign_key_check: false,
+                comment: Some(
+                    "01-clipboard",
+                ),
+            },
+            M {
+                up: "CREATE INDEX IF NOT EXISTS last_updated ON clipboard (last_updated);\n",
+                up_hook: None,
+                down: Some(
+                    "DROP INDEX IF EXISTS last_updated;\n",
+                ),
+                down_hook: None,
+                foreign_key_check: false,
+                comment: Some(
+                    "02-last-updated-index",
+                ),
+            },
+        ],
+    },
+)

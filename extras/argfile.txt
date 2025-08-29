@@ -1,0 +1,6 @@
+--database
+/tmp/clipvault.db
+list
+--max-preview-width
+100
+--reverse

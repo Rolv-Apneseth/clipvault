@@ -4,6 +4,7 @@ permissions:
   contents: write
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -23,7 +24,7 @@ defaults:
 jobs:
   upload-assets:
     name: ${{ matrix.target }}
-    if: github.repository_owner == 'rolv-apneseth' && startsWith(github.event.release.name, 'v')
+    if: github.repository_owner == 'rolv-apneseth'
     runs-on: ubuntu-latest
     strategy:
       matrix:

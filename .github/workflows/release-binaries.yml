@@ -23,7 +23,7 @@ defaults:
 jobs:
   upload-assets:
     name: ${{ matrix.target }}
-    if: github.repository_owner == 'rolv-apneseth' && startsWith(github.event.release.name, 'clipvault v')
+    if: github.repository_owner == 'rolv-apneseth' && startsWith(github.event.release.name, 'v')
     runs-on: ubuntu-latest
     strategy:
       matrix:

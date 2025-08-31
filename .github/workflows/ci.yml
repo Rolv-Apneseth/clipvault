@@ -1,4 +1,4 @@
-name: Check
+name: CI
 
 on:
     workflow_dispatch:
@@ -30,11 +30,17 @@ jobs:
             - name: Check
               run: cargo check
 
+            - name: Build
+              run: cargo build --verbose
+
             - name: Lint
               run: cargo clippy -- -D warnings
 
             - name: Format
               run: cargo +nightly fmt --check
+
+            - name: Test
+              run: cargo test --verbose
 
             - name: Check if Cargo.lock needs to be updated
               run: cargo update -w --locked
@@ -48,3 +54,10 @@ jobs:
             - uses: taiki-e/install-action@cargo-deny
             - name: Check dependencies
               run: cargo deny check
+
+            - uses: taiki-e/install-action@v2
+              with:
+                tool: shellharden
+            - name: Check extra scripts
+              run: shellharden --check extras/*.sh
+

@@ -1,4 +1,4 @@
-name: Binaries # Build binaries
+name: CD - binaries # Build binaries
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ defaults:
     shell: bash
 
 jobs:
-  upload-assets:
+  upload-binaries:
     name: ${{ matrix.target }}
     if: github.repository_owner == 'rolv-apneseth'
     runs-on: ubuntu-latest

@@ -48,3 +48,10 @@ jobs:
             - uses: taiki-e/install-action@cargo-deny
             - name: Check dependencies
               run: cargo deny check
+
+            - uses: taiki-e/install-action@v2
+              with:
+                tool: shellharden
+            - name: Check extra scripts
+              run: shellharden --check extras/*.sh
+

@@ -9,8 +9,8 @@
   <a href="https://aur.archlinux.org/packages/clipvault"><img src="https://img.shields.io/aur/version/clipvault" alt="AUR version" /></a>
 </p>
 
-<!-- Demo video - GH syntax -->
-<https://github.com/user-attachments/assets/4ede611c-befd-4535-b321-af12f054dae4>
+<video alt="Clipvault demo" src="https://github.com/user-attachments/assets/8b8ddc27-faa1-443c-a948-840cd4fcc038"></video>
+
 
 ## Features
 

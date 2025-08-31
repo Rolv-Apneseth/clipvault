@@ -41,17 +41,26 @@ case $ROFI_RETV in
         fi
         exit
         ;;
-    # Handle entry deletion (kb-delete-entry, default <S-Enter>)
+    # Handle entry deletion (kb-delete-entry, default <S-Delete>)
     3)
         if [ ! "$ROFI_INFO" = "" ]; then
             clipvault delete "$ROFI_INFO"
         fi
         rofi_list
         ;;
-    # Handle a custom keybind (kb-custom-1) - delete all entries
+    # Handle custom keybind 1 (kb-custom-1) - delete all entries
     # For more about custom rofi keybinds, see <https://davatorium.github.io/rofi/current/rofi-keys.5>
     10)
         clipvault clear
+        ;;
+    # Handle custom keybind 2 (kb-custom-2) - attempt to write the text out directly using wtype
+    11)
+        if [ ! "$ROFI_INFO" = "" ]; then
+            coproc {
+                wtype "$(clipvault get "$ROFI_INFO")"
+            }
+        fi
+        exit
         ;;
     # Notify of unhandled keybind return value
     *) notify-send "Clipboard: unhandled rofi return value $ROFI_RETV" ;;

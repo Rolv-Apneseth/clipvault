@@ -11,7 +11,6 @@
 
 <video alt="Clipvault demo" src="https://github.com/user-attachments/assets/8b8ddc27-faa1-443c-a948-840cd4fcc038"></video>
 
-
 ## Features
 
 Like `cliphist`:
@@ -55,6 +54,17 @@ cargo install --git https://github.com/rolv-apneseth/clipvault --locked
 ```bash
 paru -S clipvault
 ```
+
+### Manual
+
+1. Download the tarball for your computer's architecture (probably `x86_64`) from the [releases page](https://github.com/Rolv-Apneseth/clipvault/releases)
+2. Unpack the tarball, e.g.:
+
+    ```sh
+    tar -xf clipvault-x86_64-unknown-linux-gnu.tar.gz
+    ```
+
+3. Place the `clipvault` binary in your `$PATH`
 
 ## Setup
 

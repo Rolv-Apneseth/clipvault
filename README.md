@@ -28,6 +28,7 @@ In addition:
 - **Relative positions:** support for getting/deleting items by relative position in the saved history
 - **Entry size limits**: configurable minimum and maximum size for stored entries
 - **Entry age limit:** configurable max age for entries - automatically remove old clipboard entries
+- **Informative previews:** previews for binary data support many more types e.g. `video/mp4`, `application/pdf`, etc.
 
 ## Requirements
 

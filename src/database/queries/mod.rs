@@ -15,8 +15,12 @@ pub fn count_entries(conn: &Connection) -> Result<usize> {
 }
 
 #[tracing::instrument(skip(conn))]
-pub fn get_all_entries(conn: &Connection) -> Result<Vec<ClipboardEntry>> {
+pub fn get_all_entries(conn: &Connection, preview_width: usize) -> Result<Vec<ClipboardEntry>> {
     tracing::debug!("getting all entries");
+
+    // NOTE: query truncates the blob content based on the allowed preview width (with a minimum
+    // for ensuring file signatures are present)
+    let max_blob_width = (preview_width.saturating_add(preview_width)).max(50);
 
     let mut stmt = conn
         .prepare(include_str!("./get_all.sql"))
@@ -24,7 +28,7 @@ pub fn get_all_entries(conn: &Connection) -> Result<Vec<ClipboardEntry>> {
         .context("failed to prepare: get all entries")?;
 
     let entries: Vec<ClipboardEntry> = stmt
-        .query(params![])
+        .query(params![max_blob_width])
         .into_diagnostic()
         .context("failed to query: get all entries")?
         .map(|c| ClipboardEntry::try_from(c))

@@ -71,10 +71,17 @@ pub fn execute(path_db: PathBuf, args: ListArgs) -> Result<()> {
         reverse,
     } = args;
 
+    let preview_width = if max_preview_width == 0 {
+        tracing::debug!("preview width limit disabled");
+        usize::MAX
+    } else {
+        max_preview_width
+    };
+
     // Database only needed to get the entries - avoid locking
     let entries = {
         let conn = init_db(&path_db)?;
-        let mut entries = get_all_entries(&conn)?;
+        let mut entries = get_all_entries(&conn, preview_width)?;
         if reverse {
             entries.reverse();
         }
@@ -86,13 +93,6 @@ pub fn execute(path_db: PathBuf, args: ListArgs) -> Result<()> {
     if entries.is_empty() {
         return Ok(());
     }
-
-    let preview_width = if max_preview_width == 0 {
-        tracing::debug!("preview width limit disabled");
-        usize::MAX
-    } else {
-        max_preview_width
-    };
 
     // Combine previews into a single string so that all the output can be written to STDOUT at the same time
     let output = entries

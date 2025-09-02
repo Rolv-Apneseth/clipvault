@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.1...v1.0.2) - 2025-09-02
+
+### Fixed
+
+- only get required content for previews ([#11](https://github.com/Rolv-Apneseth/clipvault/pull/11))
+
 ## [1.0.1](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.0...v1.0.1) - 2025-08-30
 
 ### Other

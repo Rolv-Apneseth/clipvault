@@ -3,6 +3,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use unicode_segmentation::UnicodeSegmentation;
+
 /// Returns the given number of bytes as a human-readable string representation.
 pub fn human_bytes(mut bytes: usize) -> String {
     let unit = if bytes < 1_000 {
@@ -22,19 +24,19 @@ pub fn human_bytes(mut bytes: usize) -> String {
 }
 
 /// Truncates a string to the given number of characters.
-pub fn truncate(s: &str, max_chars: usize) -> Cow<'_, str> {
-    if max_chars <= 1 {
-        return s[..max_chars].into();
+pub fn truncate(s: &str, max_graphemes: usize) -> Cow<'_, str> {
+    let graphemes = s.graphemes(true).collect::<Vec<_>>();
+
+    if graphemes.is_empty() || max_graphemes >= graphemes.len() {
+        return Cow::from(s);
     }
 
-    if max_chars >= s.chars().count() {
-        return s.into();
+    if max_graphemes <= 1 {
+        return graphemes[..max_graphemes].join("").into();
     }
 
-    match s.char_indices().nth(max_chars.saturating_sub(1)) {
-        None => Cow::from(s),
-        Some((idx, _)) => Cow::Owned(format!("{}…", &s[..idx].trim_end())),
-    }
+    let max = max_graphemes - 1;
+    Cow::Owned(format!("{}…", graphemes[..max].join("")))
 }
 
 /// Current Unix timestamp in seconds - based on system time.
@@ -64,7 +66,9 @@ mod test {
 
     #[test]
     fn test_truncate() {
+        // Character count only for basic Latin text - should be equivalent
         assert_eq!(truncate("abc", 0).chars().count(), 0);
+        assert_eq!(truncate("", 17).chars().count(), 0);
         assert_eq!(truncate(";lakdf", 1).chars().count(), 1);
         assert_eq!(truncate("ioiek", 2).chars().count(), 2);
         assert_eq!(truncate("zcxvsd", 3).chars().count(), 3);
@@ -81,6 +85,19 @@ mod test {
                 .count(),
             18
         );
+
+        // Graphemes
+        assert_eq!(truncate("😀😀", 5).graphemes(true).count(), 2);
+        assert_eq!(truncate("😀🫡😀", 2).graphemes(true).count(), 2);
+        assert_eq!(truncate("ᚅ ᚆ ᚇ", 4).graphemes(true).count(), 4);
+
+        assert_eq!(truncate("ƀ Ɓ Ƃ ƃ Ƅ ƅ Ɔ Ƈ ƈ Ɖ Ɗ Ƌ ƌ", 4), "ƀ Ɓ…");
+        assert_eq!(truncate("й к л м н о п р с т у ф", 8), "й к л м…");
+        assert_eq!(truncate("ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ ڨ", 16), "ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ…");
+        assert_eq!(truncate("ᛦ ᛧ ᛨ ᛩ ᛪ ᛫ ᛬ ᛭ ᛮ ᛯ ᛰ ", 6), "ᛦ ᛧ ᛨ…");
+        assert_eq!(truncate("ᚅ ᚆ ᚇ", 5), "ᚅ ᚆ ᚇ");
+        assert_eq!(truncate("ㄱ ㄲ ㄳ ㄴ ㄵ ㄶ ㄷ ㄸ ㄹ", 4), "ㄱ ㄲ…");
+        assert_eq!(truncate("ポ マ ミ ム", 6), "ポ マ ミ…");
     }
 
     #[test]

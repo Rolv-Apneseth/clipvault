@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     io::{Cursor, Write, stdout},
     path::PathBuf,
 };
@@ -17,7 +16,7 @@ use crate::{
     utils::{human_bytes, ignore_broken_pipe, truncate},
 };
 
-fn preview_image(data: &[u8]) -> Option<Cow<'_, str>> {
+fn preview_image(data: &[u8]) -> Option<String> {
     let img_reader = ImageReader::new(Cursor::new(data))
         .with_guessed_format()
         .ok()?;
@@ -25,15 +24,29 @@ fn preview_image(data: &[u8]) -> Option<Cow<'_, str>> {
     let img = img_reader.decode().ok()?;
     let (width, height) = img.dimensions();
 
-    Some(Cow::from(format!(
+    Some(format!(
         "[[ binary data {} {} {width}x{height} ]]",
         human_bytes(data.len()),
         format.to_mime_type(),
-    )))
+    ))
 }
 
 fn get_mimemtype(data: &[u8]) -> Option<String> {
     data.sniff_mime_type().map(String::from)
+}
+
+fn preview_text(data: &[u8], width: usize) -> String {
+    let mut result = String::with_capacity(data.len());
+    String::from_utf8_lossy(data)
+        .split_whitespace()
+        .for_each(|w| {
+            if !result.is_empty() {
+                result.push(' ');
+            }
+            result.push_str(w);
+        });
+
+    truncate(&result, width).into_owned()
 }
 
 #[tracing::instrument(skip(data))]
@@ -47,18 +60,13 @@ fn preview(id: u64, data: &[u8], width: usize) -> String {
             }
             // Try and parse mime-type for other binary data
             else if let Some(mimetype) = get_mimemtype(data) {
-                Cow::from(format!("[[ binary data {mimetype}]]"))
+                format!("[[ binary data {mimetype}]]")
             } else {
-                Cow::from("[[ binary data ]]")
+                "[[ binary data ]]".into()
             }
         }
-        ContentType::UTF_8 | ContentType::UTF_8_BOM => {
-            let s = String::from_utf8_lossy(data).trim().to_owned();
-            let s = s.split_whitespace().collect::<Vec<_>>().join(" ");
-            let s = truncate(&s, width).into_owned();
-            Cow::from(s)
-        }
-        _ => Cow::from("[[ Non-UTF-8 text ]]"),
+        ContentType::UTF_8 | ContentType::UTF_8_BOM => preview_text(data, width),
+        _ => "[[ Non-UTF-8 text ]]".into(),
     };
 
     format!("{id}{SEPARATOR}{s}")

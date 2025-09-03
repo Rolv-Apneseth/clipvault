@@ -13,8 +13,7 @@ keywords = ["clipboard", "clipboard-history", "clipboard-manager"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-miette = { version = "7.6", features = ["fancy"] }
-
+# CLI args
 clap = { version = "4.5", features = ["derive", "env"] }
 argfile = { version = "0.2" }
 dirs = { version = "6.0" }
@@ -35,6 +34,9 @@ tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = { version = "0.2" }
 
+# Misc
+unicode-segmentation = "1.10"                      # Limit preview width by grapheme clusters
+miette = { version = "7.6", features = ["fancy"] } # Fancy errors
 
 [dev-dependencies]
 pretty_assertions = "1.4"

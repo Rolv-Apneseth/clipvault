@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
-# Full `rofi` wrapper, including image preview.
+# Custom mode for `rofi`, including image preview.
 # Usage: rofi -modi clipboard:/path/to/clipvault_rofi.sh -show clipboard -show-icons
 
 rofi_list()
 {
-    tmp_dir="${XDG_CACHE_HOME:-$HOME/.cache}/clipvault/thumbs"
-    rm -rf "$tmp_dir"
-    mkdir -p "$tmp_dir"
+    list=$(clipvault list)
 
-    # Generates thumbnails (for matched image formats) and returns entries with the ID column hidden
-    # in the `$ROFI_INFO` variable.
+    # Ensure thumbnail directory exists
+    thumbnails_dir="${XDG_CACHE_HOME:-$HOME/.cache}/clipvault/thumbs"
+    [ -d "$thumbnails_dir" ] || mkdir -p "$thumbnails_dir"
+
+    # Delete thumbnails that are no longer in the DB
+    find "$thumbnails_dir" -type f | while IFS= read -r thumbnail; do
+        item_id=$(basename "${thumbnail%.*}")
+        if ! grep -q "^${item_id}\s\[\[ binary data" <<< "$list"; then
+            rm "$thumbnail"
+        fi
+    done
+
+    # Generates thumbnails (for matched image formats) for entries which don't already have one in
+    # the thumbnails directory, and returns entries ready to be displayed by `rofi`.
     read -r -d '' prog << EOF
 /^[0-9]+\s<meta http-equiv=/ { next }
 match(\$0, /^([0-9]+)\s(\[\[\sbinary.*(jpg|jpeg|png|bmp|webp|tif|gif).*)/, grp) {
     image = grp[1]"."grp[3]
-    system("echo " grp[1] " | clipvault get >$tmp_dir/"image)
-    print grp[2]"\000icon\037$tmp_dir/"image"\037info\037"grp[1]"\n"
+    system("[[ -f ${thumbnails_dir}/"image" ]] || echo " grp[1] " | clipvault get >${thumbnails_dir}/"image)
+    print grp[2]"\000icon\037$thumbnails_dir/"image"\037info\037"grp[1]"\n"
     next
 }
 match(\$0, /^([0-9]+)\s(.*)/, grp) {
@@ -25,7 +35,7 @@ match(\$0, /^([0-9]+)\s(.*)/, grp) {
 1
 EOF
 
-    clipvault list | gawk "$prog"
+    echo "$list" | gawk "$prog"
 }
 
 case $ROFI_RETV in

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Shows preview for the highlighted entry, and only copies to clipboard if a value was selected.
+# An `fzf` wrapper, with text and image previews (using sixel).
+# Usage: /path/to/clipvault_fzf.sh
 
 case "$1" in
     preview)

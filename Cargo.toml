@@ -17,7 +17,7 @@ categories = ["command-line-utilities"]
 clap = { version = "4.5", features = ["derive", "env"] }
 argfile = { version = "0.2" }
 dirs = { version = "6.0" }
-humantime = { version = "2.2" }
+humantime = { version = "2.3" }
 
 # MIME types
 image = "0.25"
@@ -43,8 +43,8 @@ pretty_assertions = "1.4"
 assert_cmd = "2.0"
 predicates = "3.0"
 base64 = "0.22"
-tempfile = "3.21"
-proptest = "1.7"
+tempfile = "3.23"
+proptest = "1.8"
 insta = "1.43"
 
 [profile.release]

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.3...v1.0.4) - 2025-10-02
+
+### Testing
+
+- additional test cases for text truncation based on grapheme clusters
+
 ## [1.0.3](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.2...v1.0.3) - 2025-09-03
 
 ### Fixed

@@ -1,6 +1,6 @@
 use std::{
     io::{Cursor, Write, stdout},
-    path::PathBuf,
+    path::Path,
 };
 
 use content_inspector::ContentType;
@@ -73,7 +73,7 @@ fn preview(id: u64, data: &[u8], width: usize) -> String {
 }
 
 #[tracing::instrument(skip(path_db))]
-pub fn execute(path_db: PathBuf, args: ListArgs) -> Result<()> {
+pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
     let ListArgs {
         max_preview_width,
         reverse,
@@ -88,7 +88,7 @@ pub fn execute(path_db: PathBuf, args: ListArgs) -> Result<()> {
 
     // Database only needed to get the entries - avoid locking
     let entries = {
-        let conn = init_db(&path_db)?;
+        let conn = init_db(path_db)?;
         let mut entries = get_all_entries(&conn, preview_width)?;
         if reverse {
             entries.reverse();

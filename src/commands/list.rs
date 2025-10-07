@@ -110,7 +110,7 @@ pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
         .join("\n");
 
     let mut stdout = stdout().lock();
-    ignore_broken_pipe(write!(&mut stdout, "{output}",))
+    ignore_broken_pipe(writeln!(&mut stdout, "{output}",))
         .into_diagnostic()
         .context("failed to write to STDOUT")?;
     ignore_broken_pipe(stdout.flush())

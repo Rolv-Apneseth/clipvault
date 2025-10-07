@@ -1,6 +1,6 @@
 use std::{
     io::{Read, stdin},
-    path::PathBuf,
+    path::Path,
 };
 
 use miette::{Context, IntoDiagnostic, Result, miette};
@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[instrument]
-pub fn execute(path_db: PathBuf, args: StoreArgs) -> Result<()> {
+pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
     let StoreArgs {
         max_entries,
         max_entry_age: max_age,
@@ -47,7 +47,7 @@ pub fn execute(path_db: PathBuf, args: StoreArgs) -> Result<()> {
             // As of writing, "clear" is not yet used by `wl-clipboard`.
             "clear" => {
                 tracing::debug!("explicitly cleared clipboard");
-                return delete_all_entries(&init_db(&path_db)?);
+                return delete_all_entries(&init_db(path_db)?);
             }
             // Clipboard is empty - nothing to store
             "nil" => return Ok(()),
@@ -85,7 +85,7 @@ pub fn execute(path_db: PathBuf, args: StoreArgs) -> Result<()> {
     }
 
     // Only get DB connection after parsing STDIN - avoid locking
-    let conn = &init_db(&path_db)?;
+    let conn = &init_db(path_db)?;
 
     // Delete old entries
     let max_age = max_age.as_secs();

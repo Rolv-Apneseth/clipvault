@@ -24,11 +24,11 @@ fn main() -> Result<()> {
     let path_db = args.database;
 
     match args.command {
-        Commands::List(args) => commands::list::execute(path_db, args),
-        Commands::Store(args) => commands::store::execute(path_db, args),
-        Commands::Get(args) => commands::get::execute(path_db, args),
-        Commands::Delete(args) => commands::delete::execute(path_db, args),
-        Commands::Clear => commands::clear::execute(path_db),
+        Commands::List(args) => commands::list::execute(&path_db, args),
+        Commands::Store(args) => commands::store::execute(&path_db, args),
+        Commands::Get(args) => commands::get::execute(&path_db, args),
+        Commands::Delete(args) => commands::delete::execute(&path_db, args),
+        Commands::Clear => commands::clear::execute(&path_db),
     }
     .inspect_err(trace_err)
 }

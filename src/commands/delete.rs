@@ -1,6 +1,6 @@
 use std::{
     io::{Read, stdin},
-    path::PathBuf,
+    path::Path,
 };
 
 use miette::{Context, IntoDiagnostic, Result, miette};
@@ -15,7 +15,7 @@ use crate::{
 };
 
 #[tracing::instrument(skip(path_db))]
-pub fn execute(path_db: PathBuf, args: GetDelArgs) -> Result<()> {
+pub fn execute(path_db: &Path, args: GetDelArgs) -> Result<()> {
     let GetDelArgs { input, index } = args;
 
     assert!(
@@ -31,7 +31,7 @@ pub fn execute(path_db: PathBuf, args: GetDelArgs) -> Result<()> {
     }
 }
 
-fn delete_entry(path_db: PathBuf, mut input: String) -> Result<()> {
+fn delete_entry(path_db: &Path, mut input: String) -> Result<()> {
     // Read from STDIN if no argument given
     if input.is_empty() {
         stdin()
@@ -42,12 +42,12 @@ fn delete_entry(path_db: PathBuf, mut input: String) -> Result<()> {
     }
 
     let id = extract_id(input)?;
-    let conn = &init_db(&path_db)?;
+    let conn = &init_db(path_db)?;
     delete_entry_by_id(conn, id)
 }
 
-fn delete_entry_rel(path_db: PathBuf, i: isize) -> Result<()> {
-    let conn = &init_db(&path_db)?;
+fn delete_entry_rel(path_db: &Path, i: isize) -> Result<()> {
+    let conn = &init_db(path_db)?;
 
     let len = count_entries(conn)?;
     if len == 0 {

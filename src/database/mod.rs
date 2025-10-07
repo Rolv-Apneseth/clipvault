@@ -1,4 +1,4 @@
-use std::{fs, os::unix::fs::PermissionsExt, path::Path, sync::LazyLock};
+use std::{path::Path, sync::LazyLock};
 
 use include_dir::{Dir, include_dir};
 use miette::{Context, IntoDiagnostic, Result};
@@ -20,30 +20,6 @@ pub fn get_db_connection(path_db: &Path) -> Result<Connection> {
     Connection::open(path_db)
         .into_diagnostic()
         .context("failed to connect to the database")
-}
-
-/// Ensures that the DB file matches the expected permissions, and modifies
-/// if it does not.
-///
-/// DB file should be read-writeable by the owner only (i.e. `chmod 600`).
-pub fn ensure_db_permissions(path_db: &Path) -> Result<()> {
-    if !path_db.is_file() {
-        return Ok(());
-    }
-
-    let mut perms = fs::metadata(path_db)
-        .into_diagnostic()
-        .context("failed to read DB file metadata")?
-        .permissions();
-
-    if perms.mode() != 0o600 {
-        perms.set_mode(0o600);
-        fs::set_permissions(path_db, perms)
-            .into_diagnostic()
-            .context("failed to set DB file permissions")?;
-    }
-
-    Ok(())
 }
 
 #[instrument]

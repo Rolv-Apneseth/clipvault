@@ -3,7 +3,6 @@ use clap::Parser;
 use clipvault::{
     cli::{Cli, Commands},
     commands,
-    database::ensure_db_permissions,
     logging::{init_logging, trace_err},
 };
 
@@ -31,7 +30,5 @@ fn main() -> Result<()> {
         Commands::Delete(args) => commands::delete::execute(&path_db, args),
         Commands::Clear => commands::clear::execute(&path_db),
     }
-    .inspect_err(trace_err)?;
-
-    ensure_db_permissions(&path_db).inspect_err(trace_err)
+    .inspect_err(trace_err)
 }

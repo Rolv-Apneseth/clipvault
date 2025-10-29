@@ -49,23 +49,41 @@ pub fn delete_all_entries(conn: &Connection) -> Result<()> {
         .context("failed to execute: wipe entries")
 }
 
+/// Perform a `VACUUM` on the DB, reducing its size by clearing deleted entries and defragmenting.
+#[tracing::instrument(skip(conn))]
+fn vacuum(conn: &Connection) -> Result<()> {
+    tracing::debug!("vacuuming DB");
+
+    conn.execute("VACUUM;", params![])
+        .map(|_| ())
+        .into_diagnostic()
+        .context("failed to execute: vacuum")
+}
+
 #[tracing::instrument(skip(conn))]
 pub fn delete_entries_older_than(conn: &Connection, timestamp: u64) -> Result<usize> {
     tracing::debug!("deleting old entries");
 
-    conn.execute(include_str!("./delete_old.sql"), params![timestamp])
+    let changed = conn
+        .execute(include_str!("./delete_old.sql"), params![timestamp])
         .into_diagnostic()
-        .context("failed to execute: delete old entries")
+        .context("failed to execute: delete old entries")?;
+
+    if changed > 0 {
+        vacuum(conn).map(|_| changed)
+    } else {
+        Ok(changed)
+    }
 }
 
 #[tracing::instrument(skip(conn))]
-pub fn trim_entries(conn: &Connection, limit: usize) -> Result<()> {
+pub fn trim_entries(conn: &Connection, limit: usize) -> Result<usize> {
     tracing::debug!("trimming entries over limit");
 
     let count = count_entries(conn)?;
     if count <= limit {
         tracing::trace!("not over limit");
-        return Ok(());
+        return Ok(0);
     }
 
     let del = count - limit;
@@ -73,8 +91,12 @@ pub fn trim_entries(conn: &Connection, limit: usize) -> Result<()> {
         .execute(include_str!("./trim_entries.sql"), params![del])
         .into_diagnostic()
         .context("failed to execute: trim clipboard entries")?;
-    assert_eq!(del, changed, "should only delete specified amount");
-    Ok(())
+    assert_eq!(
+        del, changed,
+        "should only delete specified number of entries"
+    );
+
+    vacuum(conn).map(|_| changed)
 }
 
 #[tracing::instrument(skip(conn))]
@@ -100,7 +122,9 @@ pub fn delete_entry_by_id(conn: &Connection, id: u64) -> Result<()> {
     if changed == 0 {
         return Err(miette!("entry not found"));
     }
-    Ok(())
+    assert_eq!(changed, 1, "should only delete specified entry");
+
+    vacuum(conn)
 }
 
 #[tracing::instrument(skip(conn))]
@@ -118,10 +142,17 @@ pub fn get_entry_by_position(conn: &Connection, index: usize) -> Result<Clipboar
 pub fn delete_entry_by_position(conn: &Connection, index: usize) -> Result<()> {
     tracing::debug!("deleting entry by position");
 
-    conn.execute(include_str!("./delete_nth_entry.sql"), params![index])
-        .map(|_| {})
+    let changed = conn
+        .execute(include_str!("./delete_nth_entry.sql"), params![index])
         .into_diagnostic()
-        .context("couldn't delete entry by position")
+        .context("couldn't delete entry by position")?;
+
+    if changed == 0 {
+        return Err(miette!("database is empty"));
+    }
+    assert_eq!(changed, 1, "should only delete a single entry");
+
+    vacuum(conn)
 }
 
 #[tracing::instrument(skip_all)]

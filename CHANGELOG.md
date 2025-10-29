@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.5...v1.0.6) - 2025-10-29
+
+### Fixed
+
+- limit database size ([#23](https://github.com/Rolv-Apneseth/clipvault/pull/23))
+
 ## [1.0.5](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.4...v1.0.5) - 2025-10-08
 
 ### Fixed

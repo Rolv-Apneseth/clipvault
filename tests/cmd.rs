@@ -1,4 +1,4 @@
-use std::{sync::LazyLock, time::Duration};
+use std::{os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
 
 use assert_cmd::Command;
 use base64::{
@@ -280,6 +280,69 @@ fn test_get_del_input_index_conflict() {
         .write_stdin("12")
         .assert()
         .success();
+}
+
+#[test]
+fn test_db_shrinks() {
+    let db = &get_db();
+
+    let get_size = || {
+        db.as_file()
+            .metadata()
+            .expect("can't read temp DB metadata")
+            .size()
+    };
+    let store_random = || {
+        get_cmd(db)
+            .arg("store")
+            // Store enough random data to make the DB grow past the initial size
+            .write_stdin("random_data".repeat(200))
+            .assert()
+            .success();
+    };
+
+    // Initialise DB with a call don't won't actually add any entries
+    get_cmd(db).arg("list").assert().success();
+    let initial_size = get_size();
+
+    // DELETE WITH ID
+    store_random();
+    assert!(initial_size < get_size(), "DB size did not increase");
+
+    get_cmd(db).args(["delete", "1"]).assert().success();
+    assert_eq!(
+        initial_size,
+        get_size(),
+        "DB size did not shrink after deleting an entry by ID"
+    );
+
+    // DELETE WITH RELATIVE INDEXING
+    store_random();
+    assert!(initial_size < get_size(), "DB size did not increase");
+
+    get_cmd(db)
+        .args(["delete", "--index", "0"])
+        .assert()
+        .success();
+    assert_eq!(
+        initial_size,
+        get_size(),
+        "DB size did not shrink after deleting an entry using relative indexing"
+    );
+
+    // DELETE WITH EXCEEDED ENTRY COUNT
+    store_random();
+    let max_size = get_size();
+
+    get_cmd(db)
+        .args(["store", "--max-entries", "1"])
+        .write_stdin("test")
+        .assert()
+        .success();
+    assert!(
+        max_size > get_size(),
+        "DB size did not shrink after deleting entries by exceeding the max entry count"
+    );
 }
 
 // PROP TESTS

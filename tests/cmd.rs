@@ -1,4 +1,4 @@
-use std::{os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
+use std::{io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
 
 use assert_cmd::Command;
 use base64::{
@@ -58,7 +58,7 @@ const ENCODED_BINARY: &[(&str, &[u8])] = &[
 ];
 
 #[test]
-fn test_cmd_store() {
+fn test_store_basic() {
     let db = &get_db();
 
     // TEXT
@@ -107,10 +107,7 @@ fn test_store_max_entries() {
         }
         let assert = get_cmd(db).arg("list").assert();
         let output = assert.get_output();
-        assert_eq!(
-            limit as usize,
-            String::from_utf8_lossy(&output.stdout).lines().count()
-        );
+        assert_eq!(limit as usize, output.stdout.lines().count());
         assert.success();
     }
 
@@ -210,6 +207,76 @@ fn test_store_min_max_conflict() {
 }
 
 #[test]
+fn test_store_ignore_pattern() {
+    let db = &get_db();
+
+    let store_ignore = |patterns: &[&str], input: &[u8]| {
+        let mut args = Vec::from(["store"]);
+        for pat in patterns {
+            args.push("--ignore-pattern");
+            args.push(pat);
+        }
+        get_cmd(db).args(args).write_stdin(input).assert().success();
+    };
+    let count_stored = || {
+        get_cmd(db)
+            .arg("list")
+            .output()
+            .expect("couldn't list entries")
+            .stdout
+            .lines()
+            .count()
+    };
+
+    let mut expected = 0;
+
+    store_ignore(&["test"], b"testing");
+    assert_eq!(count_stored(), expected);
+
+    expected += 1;
+    store_ignore(&["test"], b"hello");
+    assert_eq!(count_stored(), expected);
+
+    store_ignore(&["^abc"], b"abcdefg");
+    assert_eq!(count_stored(), expected);
+
+    expected += 1;
+    store_ignore(&["^abc"], b"def");
+    assert_eq!(count_stored(), expected);
+
+    store_ignore(&["world$"], b"hello world");
+    assert_eq!(count_stored(), expected);
+
+    expected += 1;
+    store_ignore(&["world$"], b"goodbye earth");
+    assert_eq!(count_stored(), expected);
+
+    let http_image = r#"<meta http-equiv="content-type" content="text/html; charset=utf-8"><img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%2Fid%2FOIP.NHEHZBx37DjUVrFOwDUNugHaE8%3Fpid%3DApi&amp;f=1&amp;ipt=dcffa9260288ea62423251c252ecf228037d6317b7911a5365b03d36ca0590fb&amp;ipo=images" alt="alsdkf dlas by dannicalifornia on DeviantArt" style="width: 100%; height: 180px; min-height: 180px; max-height: 180px;" loading="lazy">"#;
+    store_ignore(
+        &[r"^<meta http-equiv=", r"ignore\n$"],
+        http_image.as_bytes(),
+    );
+    assert_eq!(count_stored(), expected);
+
+    store_ignore(
+        &[r"^<meta http-equiv=", r"ignore\n$"],
+        b"\nplease\tignore\n",
+    );
+    assert_eq!(count_stored(), expected);
+
+    expected += 1;
+    store_ignore(&[r"^<meta http-equiv=", r"ignore\n$"], b"control");
+    assert_eq!(count_stored(), expected);
+
+    // Fails with invalid regex
+    get_cmd(db)
+        .args(["store", "--ignore-pattern", "[["])
+        .assert()
+        .failure()
+        .stderr(contains("regex parse error"));
+}
+
+#[test]
 fn test_get_del() {
     let db = &get_db();
 
@@ -247,8 +314,7 @@ fn test_get_del() {
     get_cmd(db).arg("get").write_stdin("1").assert().failure();
 
     let stdout = get_cmd(db).arg("list").output().unwrap().stdout;
-    let str = String::from_utf8_lossy(&stdout);
-    assert_eq!(str.lines().count(), (u8::MAX - 3) as usize);
+    assert_eq!(stdout.lines().count(), (u8::MAX - 3) as usize);
 }
 
 #[test]

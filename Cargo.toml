@@ -19,7 +19,7 @@ argfile = { version = "0.2" }
 dirs = { version = "6.0" }
 humantime = { version = "2.3" }
 
-# MIME types
+# Binary data
 image = "0.25"
 mime-sniffer = "0.1"
 content_inspector = "0.2"
@@ -37,8 +37,9 @@ tracing-subscriber = { features = [
 tracing-appender = { version = "0.2", git = "https://github.com/tokio-rs/tracing.git" }
 
 # Misc
-unicode-segmentation = "1.10"                      # Limit preview width by grapheme clusters
+unicode-segmentation = { version = "1.12" }        # Limit preview width by grapheme clusters
 miette = { version = "7.6", features = ["fancy"] } # Fancy errors
+regex = { version = "1.12" }                       # Support ignore patterns defined by the user
 
 [dev-dependencies]
 pretty_assertions = "1.4"

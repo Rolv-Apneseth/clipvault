@@ -11,7 +11,7 @@ use crate::{
     commands::wrap_index,
     database::{
         data::ClipboardEntry,
-        init_db,
+        init_readonly_db,
         queries::{count_entries, get_entry_by_id, get_entry_by_position},
     },
     utils::ignore_broken_pipe,
@@ -28,12 +28,12 @@ fn get_entry(path_db: &Path, mut input: String) -> Result<ClipboardEntry> {
     }
 
     let id = extract_id(input)?;
-    let conn = init_db(path_db)?;
+    let conn = init_readonly_db(path_db)?;
     get_entry_by_id(&conn, id)
 }
 
 fn get_entry_rel(path_db: &Path, i: isize) -> Result<ClipboardEntry> {
-    let conn = &init_db(path_db)?;
+    let conn = &init_readonly_db(path_db)?;
 
     let len = count_entries(conn)?;
     if len == 0 {

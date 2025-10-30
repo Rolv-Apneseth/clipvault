@@ -2,7 +2,7 @@ use std::{path::Path, sync::LazyLock};
 
 use include_dir::{Dir, include_dir};
 use miette::{Context, IntoDiagnostic, Result};
-use rusqlite::Connection;
+use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::Migrations;
 use tracing::instrument;
 
@@ -19,7 +19,16 @@ static MIGRATIONS: LazyLock<Migrations<'static>> =
 pub fn get_db_connection(path_db: &Path) -> Result<Connection> {
     Connection::open(path_db)
         .into_diagnostic()
-        .context("failed to connect to the database")
+        .context("failed to get a read/write connection to the database")
+}
+
+pub fn get_db_connection_readonly(path_db: &Path) -> Result<Connection> {
+    Connection::open_with_flags(
+        path_db,
+        OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )
+    .into_diagnostic()
+    .context("failed to get readonly connection to the database")
 }
 
 #[instrument]
@@ -39,6 +48,29 @@ pub fn init_db(path_db: &Path) -> Result<Connection> {
         .into_diagnostic()
         .context("failed to apply migrations")?;
 
+    Ok(conn)
+}
+
+#[instrument]
+/// Initialise the database in readonly mode (but still creating the file and applying migrations
+/// if it does not exist).
+pub fn init_readonly_db(path_db: &Path) -> Result<Connection> {
+    tracing::debug!("initialising readonly DB");
+
+    if !path_db.is_file() {
+        tracing::debug!("DB file does not exist - creating with read/write connection first");
+        init_db(path_db)?;
+    }
+
+    let conn = get_db_connection_readonly(path_db)?;
+    if !conn
+        .table_exists(None, "clipboard")
+        .into_diagnostic()
+        .context("failed to check if table exists")?
+    {
+        tracing::debug!("DB table does not exist - setting up with read/write connection");
+        init_db(path_db)?;
+    };
     Ok(conn)
 }
 

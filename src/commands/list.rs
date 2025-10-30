@@ -12,7 +12,7 @@ use super::SEPARATOR;
 
 use crate::{
     cli::ListArgs,
-    database::{init_db, queries::get_all_entries},
+    database::{init_readonly_db, queries::get_all_entries},
     utils::{human_bytes, ignore_broken_pipe, truncate},
 };
 
@@ -88,7 +88,7 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
 
     // Database only needed to get the entries - avoid locking
     let entries = {
-        let conn = init_db(path_db)?;
+        let conn = init_readonly_db(path_db)?;
         let mut entries = get_all_entries(&conn, preview_width)?;
         if reverse {
             entries.reverse();

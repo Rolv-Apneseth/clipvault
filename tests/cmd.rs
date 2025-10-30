@@ -1,4 +1,4 @@
-use std::{io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
+use std::{env::temp_dir, io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
 
 use assert_cmd::{Command, cargo_bin};
 use base64::{
@@ -345,6 +345,22 @@ fn test_get_del_input_index_conflict() {
         .write_stdin("12")
         .assert()
         .success();
+}
+
+#[test]
+fn test_creates_db_even_for_readonly() {
+    let dir = temp_dir();
+    let path_db = dir.as_path().join("test.db");
+    let mut cmd = Command::new(cargo_bin!());
+    cmd.args([
+        "--database",
+        path_db.to_str().expect("couldn't get DB path str"),
+    ]);
+    cmd.arg("list").assert().success();
+    assert!(path_db.is_file());
+
+    let db = &get_db();
+    get_cmd(db).arg("list").assert().success();
 }
 
 #[test]

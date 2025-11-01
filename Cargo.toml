@@ -40,11 +40,11 @@ miette = { version = "7.6", features = ["fancy"] } # Fancy errors
 
 [dev-dependencies]
 pretty_assertions = "1.4"
-assert_cmd = "2.0"
+assert_cmd = "2.1"
 predicates = "3.0"
 base64 = "0.22"
 tempfile = "3.23"
-proptest = "1.8"
+proptest = "1.9"
 insta = "1.43"
 
 [profile.release]

@@ -1,6 +1,6 @@
 use std::{io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
 
-use assert_cmd::Command;
+use assert_cmd::{Command, cargo_bin};
 use base64::{
     Engine, alphabet,
     engine::{self, GeneralPurposeConfig},
@@ -20,8 +20,7 @@ fn get_db() -> NamedTempFile {
 
 /// Builds the command to be run, pointing at the given temporary file for the database.
 fn get_cmd(db: &NamedTempFile) -> Command {
-    let mut cmd = Command::cargo_bin("clipvault").expect("failed to build cmd");
-
+    let mut cmd = Command::new(cargo_bin!());
     cmd.args(["--database", &db.path().to_string_lossy()]);
     cmd
 }

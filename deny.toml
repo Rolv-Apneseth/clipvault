@@ -6,8 +6,7 @@ no-default-features = false
 feature-depth = 1
 
 [advisories]
-# Ignore unmaintained crates for now - `paste` used by `ratatui` is unmaintained.
-# TODO: remove when `0.30` is released
+# `paste` crate used by `images`
 unmaintained = "none"
 
 [licenses]
@@ -36,8 +35,5 @@ external-default-features = "allow"
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-registry = [
-  "https://github.com/rust-lang/crates.io-index",
-  "https://github.com/juhaku/utoipa",
-]
-allow-git = []
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = ["https://github.com/tokio-rs/tracing.git"]

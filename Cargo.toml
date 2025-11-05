@@ -30,9 +30,11 @@ rusqlite_migration = { version = "2.3", features = ["from-directory"] }
 include_dir = { version = "0.7" }
 
 # Logging
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tracing-appender = { version = "0.2" }
+tracing = { version = "0.1", git = "https://github.com/tokio-rs/tracing.git" }
+tracing-subscriber = { features = [
+  "env-filter",
+], git = "https://github.com/tokio-rs/tracing.git" }
+tracing-appender = { version = "0.2", git = "https://github.com/tokio-rs/tracing.git" }
 
 # Misc
 unicode-segmentation = "1.10"                      # Limit preview width by grapheme clusters

@@ -28,7 +28,7 @@ pub fn init_logging() -> Result<WorkerGuard> {
     let file_appender = tracing_appender::rolling::Builder::new()
         .rotation(Rotation::DAILY)
         .filename_suffix("log")
-        .max_log_files(2)
+        .max_log_files(8)
         .build(dir)
         .expect("failed to build log appender");
 

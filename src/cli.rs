@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueHint, command};
+use regex::Regex;
 
 use crate::defaults;
 
@@ -72,6 +73,18 @@ pub struct StoreArgs {
     /// Store sensitive values, ignoring e.g. CLIPBOARD_STATE="sensitive" set by wl-clipboard.
     #[arg(long, action, env = "CLIPVAULT_STORE_SENSITIVE")]
     pub store_sensitive: bool,
+
+    /// Entries which include any match for the given regex pattern will not be stored.
+    ///
+    /// To specify multiple patterns, simply call the argument again with a new pattern. Be mindful
+    /// of the fact that every regex pattern given will be tested against every text input.
+    ///
+    /// e.g. clipvault --store --ignore-pattern '^<meta http-equiv=' --ignore-pattern 'ignore\n$'
+    ///
+    /// Note that look-around and backreferences are not supported, as the Rust implementation
+    /// of a regex engine used does not support those features.
+    #[arg(long, action, env = "CLIPVAULT_IGNORE_PATTERN", num_args = 1)]
+    pub ignore_pattern: Option<Vec<Regex>>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -110,7 +123,3 @@ pub struct GetDelArgs {
     #[arg(long, conflicts_with("input"), allow_hyphen_values(true))]
     pub index: Option<isize>,
 }
-
-// impl Cli {
-//     fn to_config
-// }

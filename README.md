@@ -27,7 +27,8 @@ In addition:
 - **Relative positions:** support for getting/deleting items by relative position in the saved history
 - **Entry size limits**: configurable minimum and maximum size for stored entries
 - **Entry age limit:** configurable max age for entries - automatically remove old clipboard entries
-- **Informative previews:** previews for binary data support many more types e.g. `video/mp4`, `application/pdf`, etc.
+- **Ignore entries:** avoid storing certain text data using regex patterns, e.g. `^<meta http-equiv=`
+- **Informative previews:** previews for binary data support many more types, e.g. `video/mp4`, `application/pdf`, etc.
 
 ## Requirements
 
@@ -104,14 +105,15 @@ wl-paste --type image --watch clipvault store # Forward raw image data
 ### Image data from browsers
 
 When copying images from browsers, `wl-paste` will usually pass the data to `clipvault` as `text/html`.
-This is not ideal for copying images, and you may wish to have the raw image data copied instead.
-If so, you can either *only* forward image data, or, more realistically, use the below and filter
-out entries which start with `<meta http-equiv=` in your picker (check out some of the scripts
-in [extras](./extras) - I personally use the [rofi script](./extras/clipvault_rofi.sh)):
+This is not ideal for copying images, and you probably want to have the raw image data copied instead.
+If so, you can either *only* forward image data, or, more realistically, use the commands below to
+copy the image data directly, and ignore the `text/html`:
 
 ```sh
-wl-paste --watch clipvault store # Forward all data 
-wl-paste --type image --watch clipvault store # Forward specifically raw image data 
+# Forward all data, ignoring text that starts with "<meta http-equiv="
+wl-paste --watch clipvault store --ignore-pattern '^<meta http-equiv='
+# Forward specifically raw image data 
+wl-paste --type image --watch clipvault store
 ```
 
 ## Usage

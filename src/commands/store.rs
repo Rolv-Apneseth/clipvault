@@ -3,6 +3,7 @@ use std::{
     path::Path,
 };
 
+use content_inspector::ContentType;
 use miette::{Context, IntoDiagnostic, Result, miette};
 use tracing::instrument;
 
@@ -23,6 +24,7 @@ pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
         max_entry_length: max_bytes,
         min_entry_length: min_bytes,
         store_sensitive,
+        ignore_pattern,
     } = args;
 
     // Min conflicts with max
@@ -78,9 +80,24 @@ pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
         );
         return Ok(());
     }
+
     // Ignore purely whitespace content
     if buf.trim_ascii().is_empty() {
         tracing::debug!("only ASCII whitespace content");
+        return Ok(());
+    }
+
+    // Check user-provided ignore pattern
+    if let Some(regexes) = ignore_pattern
+        && matches!(
+            content_inspector::inspect(&buf),
+            ContentType::UTF_8 | ContentType::UTF_8_BOM
+        )
+        && regexes
+            .iter()
+            .any(|re| re.is_match(&String::from_utf8_lossy(&buf)))
+    {
+        tracing::debug!("content matched an ignore pattern");
         return Ok(());
     }
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.6...v1.1.0) - 2025-11-05
+
+### Refactor
+
+- bump max number of log files to be stored to 7 (n+1) ([#29](https://github.com/Rolv-Apneseth/clipvault/pull/29))
+
+### Added
+
+- ignore pattern for `store` ([#25](https://github.com/Rolv-Apneseth/clipvault/pull/25))
+
+### Fixed
+
+- limit number of log files ([#28](https://github.com/Rolv-Apneseth/clipvault/pull/28))
+
 ## [1.0.6](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.5...v1.0.6) - 2025-10-29
 
 ### Fixed

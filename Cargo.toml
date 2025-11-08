@@ -49,15 +49,7 @@ base64 = "0.22"
 tempfile = "3.23"
 proptest = "1.9"
 insta = "1.43"
-criterion = { version = "0.7", features = ["html_reports"] }
-
-[[bin]]
-name = "clipvault"
-path = "src/main.rs"
-bench = false
-
-[lib]
-bench = false
+divan = { version = "4.1.0", package = "codspeed-divan-compat" }
 
 [[bench]]
 name = "base"

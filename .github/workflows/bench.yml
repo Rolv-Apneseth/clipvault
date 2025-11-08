@@ -1,12 +1,29 @@
-on: [pull_request]
-name: Benchmark PRs
+name: CodSpeed benchmarks
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
 jobs:
-  bench:
-    name: Benchmark
+  benchmarks:
+    name: Run benchmarks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: boa-dev/criterion-compare-action@v3
+      - name: Setup rust toolchain, cache and cargo-codspeed binary
+        uses: moonrepo/setup-rust@v1
         with:
-          branchName: ${{ github.base_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed
+      - name: Build the benchmark target(s)
+        run: cargo codspeed build
+      - name: Run the benchmarks
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: instrumentation
+          run: cargo codspeed run
+          token: ${{ secrets.CODSPEED_TOKEN }}

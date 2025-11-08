@@ -1,9 +1,6 @@
-use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
-
 use std::ffi::OsString;
 use std::str::FromStr;
 use std::sync::LazyLock;
-use std::time::Duration;
 
 use clipvault::cli::{GetDelArgs, ListArgs, StoreArgs};
 use clipvault::commands::{get, list, store};
@@ -28,6 +25,7 @@ static DB: LazyLock<NamedTempFile> = LazyLock::new(|| {
     db
 });
 
+#[divan::bench(args = [1, 10, 100, 1000])]
 fn store(n: usize) {
     let db = get_temp();
 
@@ -41,6 +39,7 @@ fn store(n: usize) {
     }
 }
 
+#[divan::bench(args = [1, 5, 10, 25, 50, 100, 1000])]
 fn list(n: usize) {
     let path_db = DB.path();
 
@@ -52,49 +51,20 @@ fn list(n: usize) {
     list::execute_without_output(path_db, args).expect("failed to list");
 }
 
+#[divan::bench(args = [-100000, -1, 0, 1, 100000])]
 fn get(n: isize) {
     let path_db = DB.path();
 
-    let args = GetDelArgs {
-        input: String::new(),
-        index: Some(n),
-    };
+    for _ in 0..100 {
+        let args = GetDelArgs {
+            input: String::new(),
+            index: Some(n),
+        };
 
-    get::execute_without_output(path_db, args).expect("failed to get");
+        get::execute_without_output(path_db, args).expect("failed to get");
+    }
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
-    let mut g = c.benchmark_group("base");
-    g.warm_up_time(Duration::from_secs(1))
-        .significance_level(0.01);
-
-    // STORE
-    for n in [1, 10, 100, 1000] {
-        g.bench_with_input(BenchmarkId::new("store", n), &n, |b, i| {
-            b.iter(|| store(*i));
-        });
-    }
-
-    // LIST
-    for n in [1, 5, 10, 25, 50, 100, 1000] {
-        g.bench_with_input(BenchmarkId::new("list", n), &n, |b, i| {
-            b.iter(|| list(*i));
-        });
-    }
-
-    // GET
-    for n in [-100000, -1, 0, 1, 100000] {
-        g.bench_with_input(BenchmarkId::new("get", n), &n, |b, i| {
-            b.iter(|| {
-                for _ in 0..100 {
-                    get(*i)
-                }
-            });
-        });
-    }
-
-    g.finish();
+fn main() {
+    divan::main();
 }
-
-criterion_group!(benches, criterion_benchmark);
-criterion_main!(benches);

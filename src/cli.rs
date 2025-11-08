@@ -89,6 +89,21 @@ pub struct StoreArgs {
     pub ignore_pattern: Option<Vec<Regex>>,
 }
 
+impl Default for StoreArgs {
+    fn default() -> Self {
+        Self {
+            max_entries: defaults::MAX_ENTRIES,
+            max_entry_age: humantime::Duration::from_str(defaults::MAX_ENTRY_AGE)
+                .expect("default max entry age should be valid"),
+            max_entry_length: defaults::MAX_ENTRY_LEN,
+            min_entry_length: defaults::MIN_ENTRY_LEN,
+            bytes: None,
+            store_sensitive: false,
+            ignore_pattern: None,
+        }
+    }
+}
+
 #[derive(Debug, clap::Args)]
 pub struct ListArgs {
     /// Maximum width in characters for the previews.
@@ -107,7 +122,16 @@ pub struct ListArgs {
     pub reverse: bool,
 }
 
-#[derive(Debug, clap::Args)]
+impl Default for ListArgs {
+    fn default() -> Self {
+        Self {
+            max_preview_width: defaults::MAX_PREVIEW_WIDTH,
+            reverse: false,
+        }
+    }
+}
+
+#[derive(Debug, Default, clap::Args)]
 pub struct GetDelArgs {
     /// The selected row from `clipvault list`, or just the ID of the entry.
     ///

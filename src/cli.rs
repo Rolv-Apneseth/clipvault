@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{ffi::OsString, path::PathBuf, str::FromStr};
 
 use clap::{Parser, Subcommand, ValueHint, command};
 use regex::Regex;
@@ -46,6 +46,8 @@ pub enum Commands {
 
 #[derive(Debug, clap::Args)]
 pub struct StoreArgs {
+    #[arg(raw = true)]
+    pub bytes: Option<OsString>,
     /// Maximum number of entries to store.
     ///
     /// Setting this value to 0 disables the limit.

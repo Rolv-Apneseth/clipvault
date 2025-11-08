@@ -1,5 +1,6 @@
 use std::{
     io::{Read, stdin},
+    os::unix::ffi::OsStringExt,
     path::Path,
 };
 
@@ -19,6 +20,7 @@ use crate::{
 #[instrument]
 pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
     let StoreArgs {
+        bytes,
         max_entries,
         max_entry_age: max_age,
         max_entry_length: max_bytes,
@@ -57,12 +59,19 @@ pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
         }
     };
 
+    // Read input passed directly
+    let buf = if let Some(os_str) = bytes {
+        os_str.into_vec()
+    }
     // Read input from STDIN
-    let mut buf = vec![];
-    stdin()
-        .read_to_end(&mut buf)
-        .into_diagnostic()
-        .context("failed to read from STDIN")?;
+    else {
+        let mut buf = vec![];
+        stdin()
+            .read_to_end(&mut buf)
+            .into_diagnostic()
+            .context("failed to read from STDIN")?;
+        buf
+    };
 
     // No content to store
     if buf.is_empty() {

@@ -51,6 +51,14 @@ proptest = "1.9"
 insta = "1.43"
 criterion = { version = "0.7", features = ["html_reports"] }
 
+[[bin]]
+name = "clipvault"
+path = "src/main.rs"
+bench = false
+
+[lib]
+bench = false
+
 [[bench]]
 name = "base"
 harness = false

@@ -25,21 +25,20 @@ static DB: LazyLock<NamedTempFile> = LazyLock::new(|| {
     db
 });
 
-#[divan::bench(args = [1, 10, 100, 1000])]
+#[divan::bench(args = [1, 10, 100, 10_000, 100_000, 1_000_000], sample_size=10)]
 fn store(n: usize) {
     let db = get_temp();
 
     let bytes = OsString::from_str("a".repeat(n).as_ref()).unwrap();
-    for _ in 0..n {
-        let args = StoreArgs {
-            bytes: Some(bytes.clone()),
-            ..Default::default()
-        };
-        store::execute(db.path(), args).expect("failed to store");
-    }
+    let args = StoreArgs {
+        bytes: Some(bytes),
+        ..Default::default()
+    };
+
+    store::execute(db.path(), args).expect("failed to store");
 }
 
-#[divan::bench(args = [1, 5, 10, 25, 50, 100, 1000])]
+#[divan::bench(args = [1, 5, 10, 25, 50, 100, 1000], sample_size=10)]
 fn list(n: usize) {
     let path_db = DB.path();
 
@@ -51,18 +50,16 @@ fn list(n: usize) {
     list::execute_without_output(path_db, args).expect("failed to list");
 }
 
-#[divan::bench(args = [-100000, -1, 0, 1, 100000])]
+#[divan::bench(args = [-100000, -1, 0, 1, 100000], sample_size=100)]
 fn get(n: isize) {
     let path_db = DB.path();
 
-    for _ in 0..100 {
-        let args = GetDelArgs {
-            input: String::new(),
-            index: Some(n),
-        };
+    let args = GetDelArgs {
+        input: String::new(),
+        index: Some(n),
+    };
 
-        get::execute_without_output(path_db, args).expect("failed to get");
-    }
+    get::execute_without_output(path_db, args).expect("failed to get");
 }
 
 fn main() {

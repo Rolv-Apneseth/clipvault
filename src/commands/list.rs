@@ -73,7 +73,7 @@ fn preview(id: u64, data: &[u8], width: usize) -> String {
 }
 
 #[tracing::instrument(skip(path_db))]
-pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
+fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()> {
     let ListArgs {
         max_preview_width,
         reverse,
@@ -109,6 +109,11 @@ pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
         .collect::<Vec<_>>()
         .join("\n");
 
+    // Used for benchmarks - don't actually write to stdout
+    if !show_output {
+        return Ok(());
+    }
+
     let mut stdout = stdout().lock();
     ignore_broken_pipe(writeln!(&mut stdout, "{output}",))
         .into_diagnostic()
@@ -118,4 +123,19 @@ pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
         .context("failed to flush STDOUT")?;
 
     Ok(())
+}
+
+#[tracing::instrument(skip(path_db))]
+pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
+    execute_inner(path_db, args, true)
+}
+
+#[doc(hidden)]
+#[tracing::instrument(skip(path_db))]
+pub fn execute_without_output(path_db: &Path, args: ListArgs) -> Result<()> {
+    assert!(
+        !cfg!(debug_assertions),
+        "Not intended to run in production code"
+    );
+    execute_inner(path_db, args, false)
 }

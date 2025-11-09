@@ -49,6 +49,11 @@ base64 = "0.22"
 tempfile = "3.23"
 proptest = "1.9"
 insta = "1.43"
+divan = { version = "4.1.0", package = "codspeed-divan-compat" }
+
+[[bench]]
+name = "base"
+harness = false
 
 [profile.release]
 strip = true

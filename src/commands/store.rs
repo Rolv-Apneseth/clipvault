@@ -18,6 +18,12 @@ use crate::{
 
 #[instrument]
 pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
+    execute_with_source(path_db, args, stdin())
+}
+
+#[doc(hidden)]
+#[instrument(skip(source))]
+pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Read) -> Result<()> {
     let StoreArgs {
         max_entries,
         max_entry_age: max_age,
@@ -57,12 +63,15 @@ pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
         }
     };
 
-    // Read input from STDIN
-    let mut buf = vec![];
-    stdin()
-        .read_to_end(&mut buf)
-        .into_diagnostic()
-        .context("failed to read from STDIN")?;
+    // Read input using given source - this should be STDIN for production code
+    let buf = {
+        let mut buf = vec![];
+        source
+            .read_to_end(&mut buf)
+            .into_diagnostic()
+            .context("failed to read from STDIN")?;
+        buf
+    };
 
     // No content to store
     if buf.is_empty() {

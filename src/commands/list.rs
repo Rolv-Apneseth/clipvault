@@ -130,7 +130,12 @@ pub fn execute(path_db: &Path, args: ListArgs) -> Result<()> {
     execute_inner(path_db, args, true)
 }
 
+#[doc(hidden)]
 #[tracing::instrument(skip(path_db))]
 pub fn execute_without_output(path_db: &Path, args: ListArgs) -> Result<()> {
+    assert!(
+        !cfg!(debug_assertions),
+        "Not intended to run in production code"
+    );
     execute_inner(path_db, args, false)
 }

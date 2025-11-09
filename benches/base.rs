@@ -1,5 +1,4 @@
-use std::ffi::OsString;
-use std::str::FromStr;
+use std::io::Cursor;
 use std::sync::LazyLock;
 
 use clipvault::cli::{GetDelArgs, ListArgs, StoreArgs};
@@ -15,12 +14,9 @@ fn get_temp() -> NamedTempFile {
 static DB: LazyLock<NamedTempFile> = LazyLock::new(|| {
     let db = get_temp();
     for n in 0..defaults::MAX_ENTRIES {
-        let bytes = OsString::from_str("0".repeat(n).as_ref()).unwrap();
-        let args = StoreArgs {
-            bytes: Some(bytes),
-            ..Default::default()
-        };
-        store::execute(db.path(), args).expect("failed to store");
+        let args = StoreArgs::default();
+        let bytes = "0".repeat(n).into_bytes();
+        store::execute_with_source(db.path(), args, Cursor::new(bytes)).expect("failed to store");
     }
     db
 });
@@ -29,13 +25,9 @@ static DB: LazyLock<NamedTempFile> = LazyLock::new(|| {
 fn store(n: usize) {
     let db = get_temp();
 
-    let bytes = OsString::from_str("a".repeat(n).as_ref()).unwrap();
-    let args = StoreArgs {
-        bytes: Some(bytes),
-        ..Default::default()
-    };
-
-    store::execute(db.path(), args).expect("failed to store");
+    let args = StoreArgs::default();
+    let bytes = "0".repeat(n).into_bytes();
+    store::execute_with_source(db.path(), args, Cursor::new(bytes)).expect("failed to store");
 }
 
 #[divan::bench(args = [1, 5, 10, 25, 50, 100, 1000], sample_size=10)]

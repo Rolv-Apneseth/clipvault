@@ -1,4 +1,4 @@
-use std::{ffi::OsString, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use clap::{Parser, Subcommand, ValueHint, command};
 use regex::Regex;
@@ -46,8 +46,6 @@ pub enum Commands {
 
 #[derive(Debug, clap::Args)]
 pub struct StoreArgs {
-    #[arg(raw = true)]
-    pub bytes: Option<OsString>,
     /// Maximum number of entries to store.
     ///
     /// Setting this value to 0 disables the limit.
@@ -97,7 +95,6 @@ impl Default for StoreArgs {
                 .expect("default max entry age should be valid"),
             max_entry_length: defaults::MAX_ENTRY_LEN,
             min_entry_length: defaults::MIN_ENTRY_LEN,
-            bytes: None,
             store_sensitive: false,
             ignore_pattern: None,
         }

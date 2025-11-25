@@ -33,7 +33,7 @@ In addition:
 ## Requirements
 
 - [wl-clipboard](https://github.com/bugaevc/wl-clipboard), or anything with an interface
-  equivalent to `wl-clipboard --watch` to keep `clipvault` updated with the latest
+  equivalent to `wl-paste --watch` to keep `clipvault` updated with the latest
   clipboard entries.
 
 ## Installation

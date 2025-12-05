@@ -54,6 +54,14 @@ pub fn delete_all_entries(conn: &Connection) -> Result<()> {
 fn vacuum(conn: &Connection) -> Result<()> {
     tracing::debug!("vacuuming DB");
 
+    let estimated_free = get_estimated_free_space(conn)?;
+    if estimated_free < 1_000_000 {
+        tracing::debug!(
+            "estimated freed space ({estimated_free}) under the threshold - skipping VACUUM"
+        );
+        return Ok(());
+    }
+
     conn.execute("VACUUM;", params![])
         .map(|_| ())
         .into_diagnostic()
@@ -106,6 +114,19 @@ pub fn get_entry_by_id(conn: &Connection, id: u64) -> Result<ClipboardEntry> {
     conn.query_one(include_str!("./get_entry.sql"), params![id], |row| {
         ClipboardEntry::try_from(row)
     })
+    .into_diagnostic()
+    .context("couldn't get entry by ID")
+}
+
+#[tracing::instrument(skip(conn))]
+pub fn get_estimated_free_space(conn: &Connection) -> Result<u64> {
+    tracing::debug!("getting estimate of space that can be freed");
+
+    conn.query_one(
+        include_str!("./estimated_free_space.sql"),
+        params![],
+        |row| row.get("freelist_size"),
+    )
     .into_diagnostic()
     .context("couldn't get entry by ID")
 }

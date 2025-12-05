@@ -4,7 +4,11 @@ use std::sync::LazyLock;
 use clipvault::cli::{GetDelArgs, ListArgs, StoreArgs};
 use clipvault::commands::{get, list, store};
 use clipvault::defaults;
+use divan::AllocProfiler;
 use tempfile::NamedTempFile;
+
+#[global_allocator]
+static ALLOC: AllocProfiler = AllocProfiler::system();
 
 /// Get temporary file for DB.
 fn get_temp() -> NamedTempFile {

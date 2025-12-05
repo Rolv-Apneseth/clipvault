@@ -1,5 +1,5 @@
 use std::{
-    io::{Cursor, Write, stdout},
+    io::{BufWriter, Cursor, Write, stdout},
     path::Path,
 };
 
@@ -102,23 +102,29 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
         return Ok(());
     }
 
-    // Combine previews into a single string so that all the output can be written to STDOUT at the same time
-    let output = entries
+    let stdout = stdout();
+    let stdout = stdout.lock();
+
+    // [`BufWriter`] for more efficient, buffered writes
+    let mut writer = BufWriter::with_capacity(8 * 1024, stdout);
+
+    for entry in entries
         .into_iter()
         .map(|entry| preview(entry.id, &entry.content, preview_width))
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    // Used for benchmarks - don't actually write to stdout
-    if !show_output {
-        return Ok(());
+    {
+        if show_output {
+            writer
+                .write(&entry.into_bytes())
+                .into_diagnostic()
+                .context("failed to write to STDOUT")?;
+            writer
+                .write(b"\n")
+                .into_diagnostic()
+                .context("failed to write to STDOUT")?;
+        }
     }
 
-    let mut stdout = stdout().lock();
-    ignore_broken_pipe(writeln!(&mut stdout, "{output}",))
-        .into_diagnostic()
-        .context("failed to write to STDOUT")?;
-    ignore_broken_pipe(stdout.flush())
+    ignore_broken_pipe(writer.flush())
         .into_diagnostic()
         .context("failed to flush STDOUT")?;
 

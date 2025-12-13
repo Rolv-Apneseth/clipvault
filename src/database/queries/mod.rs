@@ -46,7 +46,9 @@ pub fn delete_all_entries(conn: &Connection) -> Result<()> {
     conn.execute(include_str!("./delete_all.sql"), params![])
         .map(|_| ())
         .into_diagnostic()
-        .context("failed to execute: wipe entries")
+        .context("failed to execute: wipe entries")?;
+
+    vacuum(conn)
 }
 
 /// Perform a `VACUUM` on the DB, reducing its size by clearing deleted entries and defragmenting.

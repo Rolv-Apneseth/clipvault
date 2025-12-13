@@ -32,6 +32,15 @@ pub fn init_db(path_db: &Path) -> Result<Connection> {
     conn.pragma_update(None, "journal_mode", "WAL")
         .into_diagnostic()
         .context("failed to apply PRAGMA: journal mode")?;
+    conn.pragma_update(None, "synchronous", "normal")
+        .into_diagnostic()
+        .context("failed to apply PRAGMA: synchronous")?;
+    conn.pragma_update(None, "journal_size_limit", "6144000")
+        .into_diagnostic()
+        .context("failed to apply PRAGMA: journal size limit")?;
+    conn.pragma_update(None, "cache_size", "10000")
+        .into_diagnostic()
+        .context("failed to apply PRAGMA: cache size")?;
 
     tracing::trace!("applying migrations");
     MIGRATIONS

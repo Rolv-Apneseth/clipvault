@@ -357,21 +357,36 @@ fn test_db_shrinks() {
             .expect("can't read temp DB metadata")
             .size()
     };
-    let store_random = || {
-        get_cmd(db)
-            .arg("store")
-            // Store enough random data to make the DB grow past the initial size
-            .write_stdin("random_data".repeat(200))
-            .assert()
-            .success();
-    };
 
     // Initialise DB with a call don't won't actually add any entries
     get_cmd(db).arg("list").assert().success();
     let initial_size = get_size();
 
+    // Grow DB with many small entries
+    let store_random = || {
+        for i in 0..500 {
+            get_cmd(db)
+                .arg("store")
+                // Store enough random data to make the DB grow past the initial size and exceed the VACUUM limit
+                .write_stdin("random_data".repeat(i))
+                .assert()
+                .success();
+        }
+        assert!(initial_size < get_size(), "DB size did not increase");
+    };
+    // Grow DB with one large entry
+    let store_large = || {
+        get_cmd(db)
+            .args(["store"])
+            .write_stdin("E".repeat(1_000_000))
+            .assert()
+            .success();
+        assert!(initial_size < get_size(), "DB size did not increase");
+    };
+
     // DELETE WITH ID
-    store_random();
+    store_large();
+    assert_ne!(initial_size, get_size());
     assert!(initial_size < get_size(), "DB size did not increase");
 
     get_cmd(db).args(["delete", "1"]).assert().success();
@@ -382,7 +397,7 @@ fn test_db_shrinks() {
     );
 
     // DELETE WITH RELATIVE INDEXING
-    store_random();
+    store_large();
     assert!(initial_size < get_size(), "DB size did not increase");
 
     get_cmd(db)
@@ -397,16 +412,26 @@ fn test_db_shrinks() {
 
     // DELETE WITH EXCEEDED ENTRY COUNT
     store_random();
-    let max_size = get_size();
+    assert!(initial_size < get_size(), "DB size did not increase");
 
     get_cmd(db)
         .args(["store", "--max-entries", "1"])
         .write_stdin("test")
         .assert()
         .success();
-    assert!(
-        max_size > get_size(),
+    assert_eq!(
+        initial_size,
+        get_size(),
         "DB size did not shrink after deleting entries by exceeding the max entry count"
+    );
+
+    // DELETE ALL
+    store_random();
+    get_cmd(db).arg("clear").assert().success();
+    assert_eq!(
+        initial_size,
+        get_size(),
+        "DB did not shrink after deleting all entries"
     );
 }
 

@@ -6,6 +6,7 @@ use std::{
 use unicode_segmentation::UnicodeSegmentation;
 
 /// Returns the given number of bytes as a human-readable string representation.
+#[must_use]
 pub fn human_bytes(mut bytes: usize) -> String {
     let unit = if bytes < 1_000 {
         "B"
@@ -24,6 +25,7 @@ pub fn human_bytes(mut bytes: usize) -> String {
 }
 
 /// Truncates a string to the given number of characters.
+#[must_use]
 pub fn truncate(s: &str, max_graphemes: usize) -> Cow<'_, str> {
     let graphemes = s.graphemes(true).collect::<Vec<_>>();
 
@@ -40,6 +42,7 @@ pub fn truncate(s: &str, max_graphemes: usize) -> Cow<'_, str> {
 }
 
 /// Current Unix timestamp in seconds - based on system time.
+#[must_use]
 pub fn now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

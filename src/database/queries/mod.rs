@@ -56,7 +56,7 @@ pub fn delete_all_entries(conn: &Connection) -> Result<()> {
 fn vacuum(conn: &Connection) -> Result<()> {
     tracing::debug!("vacuuming DB");
 
-    let estimated_free = get_estimated_free_space(conn)?;
+    let estimated_free = get_estimated_free_space(conn).unwrap_or(1_000_000);
     if estimated_free < 1_000_000 {
         tracing::debug!(
             "estimated freed space ({estimated_free}) under the threshold - skipping VACUUM"

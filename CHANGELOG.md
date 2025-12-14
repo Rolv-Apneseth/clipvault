@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1](https://github.com/Rolv-Apneseth/clipvault/compare/v1.1.0...v1.1.1) - 2025-12-14
+
+### Performance
+
+- apply some SQlite options for performance
+- use `BufWriter` to write to stdout
+- only run `VACUUM` when estimated free space is over 1MB
+
+### Fixed
+
+- shrink DB after deleting all entries
+
 ## [1.1.0](https://github.com/Rolv-Apneseth/clipvault/compare/v1.0.6...v1.1.0) - 2025-11-05
 
 ### Refactor

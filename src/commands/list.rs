@@ -60,7 +60,7 @@ fn preview(id: u64, data: &[u8], width: usize) -> String {
             }
             // Try and parse mime-type for other binary data
             else if let Some(mimetype) = get_mimemtype(data) {
-                format!("[[ binary data {mimetype}]]")
+                format!("[[ binary data {mimetype} ]]")
             } else {
                 "[[ binary data ]]".into()
             }

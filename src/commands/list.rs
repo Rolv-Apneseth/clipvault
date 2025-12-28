@@ -4,7 +4,7 @@ use std::{
 };
 
 use content_inspector::ContentType;
-use image::{GenericImageView, ImageReader};
+use image::{DynamicImage, GenericImageView, ImageReader};
 use miette::{Context, IntoDiagnostic, Result};
 use mime_sniffer::MimeTypeSniffer;
 
@@ -16,25 +16,21 @@ use crate::{
     utils::{human_bytes, ignore_broken_pipe, truncate},
 };
 
-fn preview_image(data: &[u8]) -> Option<String> {
+fn decode_image(data: &[u8]) -> Option<(&'static str, DynamicImage)> {
     let img_reader = ImageReader::new(Cursor::new(data))
         .with_guessed_format()
         .ok()?;
-    let format = img_reader.format()?;
+    let mimetype = img_reader.format()?.to_mime_type();
     let img = img_reader.decode().ok()?;
-    let (width, height) = img.dimensions();
 
-    Some(format!(
-        "[[ binary data {} {} {width}x{height} ]]",
-        human_bytes(data.len()),
-        format.to_mime_type(),
-    ))
+    Some((mimetype, img))
 }
 
-fn get_mimemtype(data: &[u8]) -> Option<String> {
+fn get_mimetype(data: &[u8]) -> Option<String> {
     data.sniff_mime_type().map(String::from)
 }
 
+#[tracing::instrument(skip(data))]
 fn preview_text(data: &[u8], width: usize) -> String {
     let mut result = String::with_capacity(data.len());
     String::from_utf8_lossy(data)
@@ -50,21 +46,35 @@ fn preview_text(data: &[u8], width: usize) -> String {
 }
 
 #[tracing::instrument(skip(data))]
+fn preview_binary(data: &[u8], width: usize) -> String {
+    // Early return if data won't be visible in preview anyway
+    if width < "[[ binary data ".len() {
+        return truncate("[[ binary data ", width).into_owned();
+    };
+
+    // Human readable representation of the byte count of the binary data
+    let byte_count = human_bytes(data.len());
+
+    // More details for image types
+    let result = if let Some((mimetype, img)) = decode_image(data) {
+        let (w, h) = img.dimensions();
+        format!("[[ binary data {byte_count} {mimetype} {w}x{h} ]]")
+    }
+    // Try and parse mime-type for other binary data
+    else if let Some(mimetype) = get_mimetype(data) {
+        format!("[[ binary data {byte_count} {mimetype} ]]")
+    } else {
+        format!("[[ binary data {byte_count} ]]")
+    };
+
+    truncate(&result, width).into_owned()
+}
+
+#[tracing::instrument(skip(data))]
 fn preview(id: u64, data: &[u8], width: usize) -> String {
     let data_type = content_inspector::inspect(data);
     let s = match data_type {
-        ContentType::BINARY => {
-            // More details for image types
-            if let Some(img_msg) = preview_image(data) {
-                img_msg
-            }
-            // Try and parse mime-type for other binary data
-            else if let Some(mimetype) = get_mimemtype(data) {
-                format!("[[ binary data {mimetype} ]]")
-            } else {
-                "[[ binary data ]]".into()
-            }
-        }
+        ContentType::BINARY => preview_binary(data, width),
         ContentType::UTF_8 | ContentType::UTF_8_BOM => preview_text(data, width),
         _ => "[[ Non-UTF-8 text ]]".into(),
     };

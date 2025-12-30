@@ -1,0 +1,8 @@
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+imports_indent = "Visual"
+imports_layout = "Horizontal"
+newline_style = "Unix"
+reorder_modules = true
+style_edition = "2024"
+wrap_comments = true

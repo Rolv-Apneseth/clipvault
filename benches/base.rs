@@ -1,12 +1,10 @@
-use std::io::Cursor;
-use std::sync::LazyLock;
+use std::{io::Cursor, sync::LazyLock};
 
-use clipvault::cli::{GetDelArgs, ListArgs, StoreArgs};
-use clipvault::commands::{get, list, store};
-use clipvault::defaults;
+use clipvault::{cli::{GetDelArgs, ListArgs, StoreArgs}, commands::{get, list, store}, defaults};
+#[cfg(feature = "bench_mem")]
 use divan::AllocProfiler;
 use tempfile::NamedTempFile;
-
+#[cfg(feature = "bench_mem")]
 #[global_allocator]
 static ALLOC: AllocProfiler = AllocProfiler::system();
 

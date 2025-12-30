@@ -1,15 +1,9 @@
 use std::{io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
 
 use assert_cmd::{Command, cargo_bin};
-use base64::{
-    Engine, alphabet,
-    engine::{self, GeneralPurposeConfig},
-};
-use clipvault::database::init_db;
-use predicates::{
-    prelude::PredicateBooleanExt,
-    str::{contains, is_empty},
-};
+use base64::{Engine, alphabet, engine::{self, GeneralPurposeConfig}};
+use clipvault::{database::init_db, utils::human_bytes};
+use predicates::{prelude::PredicateBooleanExt, str::{contains, is_empty}};
 use proptest::prelude::*;
 use tempfile::NamedTempFile;
 
@@ -18,7 +12,8 @@ fn get_db() -> NamedTempFile {
     NamedTempFile::new().expect("couldn't create tempfile")
 }
 
-/// Builds the command to be run, pointing at the given temporary file for the database.
+/// Builds the command to be run, pointing at the given temporary file for the
+/// database.
 fn get_cmd(db: &NamedTempFile) -> Command {
     let mut cmd = Command::new(cargo_bin!());
     cmd.args(["--database", &db.path().to_string_lossy()]);
@@ -32,7 +27,7 @@ const ENCODED_BINARY: &[(&str, &[u8])] = &[
     ),
     (
         "image/jpeg",
-        b"/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=",
+        b"/9j/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAAA//EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AN//Z",
     ),
     (
         "image/bmp",
@@ -53,6 +48,22 @@ const ENCODED_BINARY: &[(&str, &[u8])] = &[
     (
         "image/tiff",
         b"SUkqAAoAAACAAA0AAAEDAAEAAAABAAAAAQEDAAEAAAABAAAAAgEDAAEAAAABAAAAAwEDAAEAAAABAAAABgEDAAEAAAABAAAACgEDAAEAAAABAAAAEQEEAAEAAAAIAAAAEgEDAAEAAAABAAAAFQEDAAEAAAABAAAAFgEDAAEAAAABAAAAFwEEAAEAAAABAAAAHAEDAAEAAAABAAAAKQEDAAIAAAAAAAEAAAAAAA==",
+    ),
+    (
+        "video/mp4",
+        b"AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAA1m1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU3LjQxLjEwMA==",
+    ),
+    (
+        "application/pdf",
+        b"JVBERi0yLjAKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9SZXNvdXJjZXM8PD4+L01lZGlhQm94WzAgMCA5IDldPj5lbmRvYmoKeHJlZgowIDQKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTIgMDAwMDAgbiAKMDAwMDAwMDEwMSAwMDAwMCBuIAp0cmFpbGVyPDwvUm9vdCAxIDAgUi9TaXplIDQvSURbKDEyMzQ1Njc4OTAxMjM0NTYpKDEyMzQ1Njc4OTAxMjM0NTYpXT4+CnN0YXJ0eHJlZgoxNzQKJSVFT0Y=",
+    ),
+    (
+        "application/x-rar-compressed",
+        b"UmFyIRoHAM+QcwAADQAAAAAAAAA/HnQAgCEAAAAAAAAAAAAAAAAAAAdjZk0PMwEAIAAAAG4=",
+    ),
+    (
+        "application/x-gzip",
+        b"H4sICK6G4VsCA24AAwAAAAAAAAAAAA==",
     ),
 ];
 
@@ -80,16 +91,27 @@ fn test_store_basic() {
 
     for (mime, encoded) in ENCODED_BINARY {
         let bytes = decoder.decode(encoded).unwrap();
+        let count = human_bytes(bytes.len());
+
         get_cmd(db)
             .arg("store")
             .write_stdin(bytes)
             .assert()
             .success();
-        get_cmd(db)
-            .arg("list")
-            .assert()
-            .success()
-            .stdout(contains(*mime));
+
+        if mime.starts_with("image") {
+            get_cmd(db)
+                .arg("list")
+                .assert()
+                .success()
+                .stdout(contains(format!("[[ binary data {count} {mime} 1x1 ]]",)));
+        } else {
+            get_cmd(db)
+                .arg("list")
+                .assert()
+                .success()
+                .stdout(contains(format!("[[ binary data {count} {mime} ]]")));
+        }
     }
 }
 
@@ -367,7 +389,8 @@ fn test_db_shrinks() {
         for i in 0..500 {
             get_cmd(db)
                 .arg("store")
-                // Store enough random data to make the DB grow past the initial size and exceed the VACUUM limit
+                // Store enough random data to make the DB grow past the initial size and exceed the
+                // VACUUM limit
                 .write_stdin("random_data".repeat(i))
                 .assert()
                 .success();
@@ -436,7 +459,8 @@ fn test_db_shrinks() {
 }
 
 // PROP TESTS
-/// Re-use DB for prop tests as it is not necessary for each one to have its own.
+/// Re-use DB for prop tests as it is not necessary for each one to have its
+/// own.
 static PROPTEST_DB: LazyLock<NamedTempFile> = LazyLock::new(|| {
     let db = get_db();
     // Solves sporadic failures due to locked DB

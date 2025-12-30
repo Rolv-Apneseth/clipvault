@@ -49,6 +49,11 @@ proptest = "1.9"
 insta = "1.46"
 divan = { version = "4.1.0", package = "codspeed-divan-compat" }
 
+[features]
+default = []
+# Enable memory benchmarks
+bench_mem = []
+
 [[bench]]
 name = "base"
 harness = false

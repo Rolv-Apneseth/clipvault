@@ -1,20 +1,11 @@
-use std::{
-    io::{Read, stdin},
-    path::Path,
-};
+use std::{io::{Read, stdin}, path::Path};
 
 use content_inspector::ContentType;
+use image::GenericImageView;
 use miette::{Context, IntoDiagnostic, Result, miette};
 use tracing::instrument;
 
-use crate::{
-    cli::StoreArgs,
-    database::{
-        init_db,
-        queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry},
-    },
-    utils::now,
-};
+use crate::{cli::StoreArgs, database::{data::ClipboardEntry, init_db, queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry}}, utils::{decode_image, get_mimetype, now}};
 
 #[instrument]
 pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
@@ -120,8 +111,37 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
         delete_entries_older_than(conn, timestamp)?;
     }
 
+    // Setup additional data to be stored for the entry
+    let entry = {
+        // Inspect the content type
+        let content_type = content_inspector::inspect(&buf);
+
+        // Additional data for images and other binary data
+        let (mut mimetype, mut extra_preview_data) = (None, None);
+        if content_type.is_binary() {
+            // Resolution and mimetype for images
+            if let Some((img_mimetype, img)) = decode_image(&buf) {
+                let (w, h) = img.dimensions();
+                extra_preview_data = Some(format!("{w}x{h}"));
+                mimetype = Some(img_mimetype.into());
+            }
+            // Only mimetype for other binary data (if detected)
+            else if let Some(content_mimetype) = get_mimetype(&buf) {
+                mimetype = Some(content_mimetype);
+            }
+        };
+
+        ClipboardEntry {
+            content: buf,
+            content_type: Some(content_type),
+            mimetype,
+            extra_preview_data,
+            ..Default::default()
+        }
+    };
+
     // Upsert new entry
-    upsert_entry(conn, &buf)?;
+    upsert_entry(conn, entry)?;
 
     // Trim entries if over limit
     if max_entries != 0 {

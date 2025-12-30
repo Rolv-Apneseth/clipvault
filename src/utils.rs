@@ -1,8 +1,7 @@
-use std::{
-    borrow::Cow,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{io::Cursor, time::{SystemTime, UNIX_EPOCH}};
 
+use image::{DynamicImage, ImageReader};
+use mime_sniffer::MimeTypeSniffer;
 use unicode_segmentation::UnicodeSegmentation;
 
 /// Returns the given number of bytes as a human-readable string representation.
@@ -26,19 +25,22 @@ pub fn human_bytes(mut bytes: usize) -> String {
 
 /// Truncates a string to the given number of characters.
 #[must_use]
-pub fn truncate(s: &str, max_graphemes: usize) -> Cow<'_, str> {
+pub fn truncate(mut s: String, max_graphemes: usize) -> String {
+    if max_graphemes == 0 {
+        s.clear();
+        return s;
+    } else if max_graphemes == 1 {
+        s.drain(1..);
+        return s;
+    };
+
     let graphemes = s.graphemes(true).collect::<Vec<_>>();
-
     if graphemes.is_empty() || max_graphemes >= graphemes.len() {
-        return Cow::from(s);
-    }
-
-    if max_graphemes <= 1 {
-        return graphemes[..max_graphemes].join("").into();
+        return s;
     }
 
     let max = max_graphemes - 1;
-    Cow::Owned(format!("{}…", graphemes[..max].join("")))
+    graphemes.into_iter().take(max).chain(["…"]).collect()
 }
 
 /// Current Unix timestamp in seconds - based on system time.
@@ -60,6 +62,25 @@ pub fn ignore_broken_pipe(res: std::io::Result<()>) -> std::io::Result<()> {
     }
 }
 
+/// Attempt to parse image data from a byte slice.
+///
+/// Returns a tuple in the format `(mimetype, dynamic_image)`.
+#[must_use]
+pub fn decode_image(data: &[u8]) -> Option<(&'static str, DynamicImage)> {
+    let img_reader = ImageReader::new(Cursor::new(data))
+        .with_guessed_format()
+        .ok()?;
+    let mimetype = img_reader.format()?.to_mime_type();
+    let img = img_reader.decode().ok()?;
+
+    Some((mimetype, img))
+}
+
+/// Guess the mimetype of data contained in a byte slice using `mime_sniffer`.
+pub fn get_mimetype(data: &[u8]) -> Option<String> {
+    data.sniff_mime_type().map(String::from)
+}
+
 #[cfg(test)]
 mod test {
     use miette::miette;
@@ -70,39 +91,41 @@ mod test {
     #[test]
     fn test_truncate() {
         // Character count only for basic Latin text - should be equivalent
-        assert_eq!(truncate("abc", 0).chars().count(), 0);
-        assert_eq!(truncate("", 17).chars().count(), 0);
-        assert_eq!(truncate(";lakdf", 1).chars().count(), 1);
-        assert_eq!(truncate("ioiek", 2).chars().count(), 2);
-        assert_eq!(truncate("zcxvsd", 3).chars().count(), 3);
-        assert_eq!(truncate("/.l", 5).chars().count(), 3);
+        assert_eq!(truncate("abc".into(), 0).chars().count(), 0);
+        assert_eq!(truncate("".into(), 17).chars().count(), 0);
+        assert_eq!(truncate("d".into(), 1).chars().count(), 1);
+        assert_eq!(truncate(";lakdf".into(), 1).chars().count(), 1);
+        assert_eq!(truncate("ioiek".into(), 2).chars().count(), 2);
+        assert_eq!(truncate("zcxvsd".into(), 3).chars().count(), 3);
+        assert_eq!(truncate("/.l".into(), 5).chars().count(), 3);
         assert_eq!(
-            truncate("alksdfaksldfklaslkfasfkskladfalk", 7)
+            truncate("alksdfaksldfklaslkfasfkskladfalk".into(), 7)
                 .chars()
                 .count(),
             7
         );
         assert_eq!(
-            truncate("alksdfaksldfklaslkfasfkskladfalklsdkfks", 18)
+            truncate("alksdfaksldfklaslkfasfkskladfalklsdkfks".into(), 18)
                 .chars()
                 .count(),
             18
         );
+        assert_eq!(truncate("o".into(), 1), "o");
 
         // Graphemes
-        assert_eq!(truncate("😀😀", 5).graphemes(true).count(), 2);
-        assert_eq!(truncate("😀🫡😀", 2).graphemes(true).count(), 2);
-        assert_eq!(truncate("ᚅ ᚆ ᚇ", 4).graphemes(true).count(), 4);
+        assert_eq!(truncate("😀😀".into(), 5).graphemes(true).count(), 2);
+        assert_eq!(truncate("😀🫡😀".into(), 2).graphemes(true).count(), 2);
+        assert_eq!(truncate("ᚅ ᚆ ᚇ".into(), 4).graphemes(true).count(), 4);
 
-        assert_eq!(truncate("ƀ Ɓ Ƃ ƃ Ƅ ƅ Ɔ Ƈ ƈ Ɖ Ɗ Ƌ ƌ", 4), "ƀ Ɓ…");
-        assert_eq!(truncate("й к л м н о п р с т у ф", 8), "й к л м…");
-        assert_eq!(truncate("ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ ڨ", 16), "ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ…");
-        assert_eq!(truncate("ᛦ ᛧ ᛨ ᛩ ᛪ ᛫ ᛬ ᛭ ᛮ ᛯ ᛰ ", 6), "ᛦ ᛧ ᛨ…");
-        assert_eq!(truncate("ᚅ ᚆ ᚇ", 5), "ᚅ ᚆ ᚇ");
-        assert_eq!(truncate("ㄱ ㄲ ㄳ ㄴ ㄵ ㄶ ㄷ ㄸ ㄹ", 4), "ㄱ ㄲ…");
-        assert_eq!(truncate("ポ マ ミ ム", 6), "ポ マ ミ…");
-        assert_eq!(truncate("🫰🫰🏿🫰🏻🫰🏽🫰🏼🫰🏾", 6), "🫰🫰🏿🫰🏻🫰🏽🫰🏼🫰🏾");
-        assert_eq!(truncate("👍👍🏾👍🏼👍🏿👍🏽👍🏻", 5), "👍👍🏾👍🏼👍🏿…");
+        assert_eq!(truncate("ƀ Ɓ Ƃ ƃ Ƅ ƅ Ɔ Ƈ ƈ Ɖ Ɗ Ƌ ƌ".into(), 4), "ƀ Ɓ…");
+        assert_eq!(truncate("й к л м н о п р с т у ф".into(), 8), "й к л м…");
+        assert_eq!(truncate("ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ ڨ".into(), 16), "ڠ ڡ ڢ ڣ ڤ ڥ ڦ ڧ…");
+        assert_eq!(truncate("ᛦ ᛧ ᛨ ᛩ ᛪ ᛫ ᛬ ᛭ ᛮ ᛯ ᛰ ".into(), 6), "ᛦ ᛧ ᛨ…");
+        assert_eq!(truncate("ᚅ ᚆ ᚇ".into(), 5), "ᚅ ᚆ ᚇ");
+        assert_eq!(truncate("ㄱ ㄲ ㄳ ㄴ ㄵ ㄶ ㄷ ㄸ ㄹ".into(), 4), "ㄱ ㄲ…");
+        assert_eq!(truncate("ポ マ ミ ム".into(), 6), "ポ マ ミ…");
+        assert_eq!(truncate("🫰🫰🏿🫰🏻🫰🏽🫰🏼🫰🏾".into(), 6), "🫰🫰🏿🫰🏻🫰🏽🫰🏼🫰🏾");
+        assert_eq!(truncate("👍👍🏾👍🏼👍🏿👍🏽👍🏻".into(), 5), "👍👍🏾👍🏼👍🏿…");
     }
 
     #[test]

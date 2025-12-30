@@ -29,6 +29,18 @@ LazyLock(
                     "02-last-updated-index",
                 ),
             },
+            M {
+                up: "ALTER TABLE clipboard ADD COLUMN content_type INTEGER;\nALTER TABLE clipboard ADD COLUMN mimetype TEXT;\nALTER TABLE clipboard ADD COLUMN extra_preview_data TEXT;\n",
+                up_hook: None,
+                down: Some(
+                    "ALTER TABLE clipboard DROP COLUMN content_type;\nALTER TABLE clipboard DROP COLUMN mimetype;\nALTER TABLE clipboard DROP COLUMN extra_preview_data;\n",
+                ),
+                down_hook: None,
+                foreign_key_check: false,
+                comment: Some(
+                    "03-preview-data",
+                ),
+            },
         ],
     },
 )

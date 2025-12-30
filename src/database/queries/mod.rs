@@ -18,17 +18,13 @@ pub fn count_entries(conn: &Connection) -> Result<usize> {
 pub fn get_all_entries(conn: &Connection, preview_width: usize) -> Result<Vec<ClipboardEntry>> {
     tracing::debug!("getting all entries");
 
-    // NOTE: query truncates the blob content based on the allowed preview width (with a minimum
-    // for ensuring file signatures are present)
-    let max_blob_width = (preview_width.saturating_add(preview_width)).max(50);
-
     let mut stmt = conn
         .prepare(include_str!("./get_all.sql"))
         .into_diagnostic()
         .context("failed to prepare: get all entries")?;
 
     let entries: Vec<ClipboardEntry> = stmt
-        .query(params![max_blob_width])
+        .query(params![preview_width])
         .into_diagnostic()
         .context("failed to query: get all entries")?
         .map(|c| ClipboardEntry::try_from(c))
@@ -51,7 +47,8 @@ pub fn delete_all_entries(conn: &Connection) -> Result<()> {
     vacuum(conn)
 }
 
-/// Perform a `VACUUM` on the DB, reducing its size by clearing deleted entries and defragmenting.
+/// Perform a `VACUUM` on the DB, reducing its size by clearing deleted entries
+/// and defragmenting.
 #[tracing::instrument(skip(conn))]
 fn vacuum(conn: &Connection) -> Result<()> {
     tracing::debug!("vacuuming DB");
@@ -179,7 +176,17 @@ pub fn delete_entry_by_position(conn: &Connection, index: usize) -> Result<()> {
 }
 
 #[tracing::instrument(skip_all)]
-pub fn upsert_entry(conn: &Connection, content: &[u8]) -> Result<()> {
+pub fn upsert_entry(conn: &Connection, entry: impl AsRef<ClipboardEntry>) -> Result<()> {
+    let ClipboardEntry {
+        content,
+        mimetype,
+        extra_preview_data,
+        content_type,
+        ..
+    } = entry.as_ref();
+    let content_type =
+        content_type.expect("should not be storing an entry with an unset content type") as u8;
+
     tracing::debug!("creating entry");
     tracing::debug!(
         "entry content preview: {}",
@@ -191,7 +198,13 @@ pub fn upsert_entry(conn: &Connection, content: &[u8]) -> Result<()> {
 
     conn.execute(
         include_str!("./upsert_post.sql"),
-        params![content, timestamp],
+        params![
+            timestamp,
+            content,
+            content_type,
+            mimetype,
+            extra_preview_data
+        ],
     )
     .map(|_| ())
     .into_diagnostic()

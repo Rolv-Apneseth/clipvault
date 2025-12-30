@@ -33,9 +33,10 @@ pub(super) fn wrap_index(len: usize, index: isize) -> usize {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use pretty_assertions::assert_eq;
     use proptest::prelude::*;
+
+    use super::*;
 
     #[test]
     fn test_extract_id() {

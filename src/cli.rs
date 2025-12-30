@@ -52,7 +52,8 @@ pub struct StoreArgs {
     #[arg(long, default_value_t = defaults::MAX_ENTRIES, env = "CLIPVAULT_MAX_ENTRIES")]
     pub max_entries: usize,
 
-    /// Entries older than this value will be deleted. Only accurate to the second.
+    /// Entries older than this value will be deleted. Only accurate to the
+    /// second.
     ///
     /// Setting this value to 0s or less disables the limit.
     #[arg(long, default_value = defaults::MAX_ENTRY_AGE, env = "CLIPVAULT_MAX_AGE")]
@@ -70,19 +71,24 @@ pub struct StoreArgs {
     #[arg(long, default_value_t = defaults::MIN_ENTRY_LEN, env = "CLIPVAULT_MIN_LENGTH")]
     pub min_entry_length: usize,
 
-    /// Store sensitive values, ignoring e.g. CLIPBOARD_STATE="sensitive" set by wl-clipboard.
+    /// Store sensitive values, ignoring e.g. CLIPBOARD_STATE="sensitive" set by
+    /// wl-clipboard.
     #[arg(long, action, env = "CLIPVAULT_STORE_SENSITIVE")]
     pub store_sensitive: bool,
 
-    /// Entries which include any match for the given regex pattern will not be stored.
+    /// Entries which include any match for the given regex pattern will not be
+    /// stored.
     ///
-    /// To specify multiple patterns, simply call the argument again with a new pattern. Be mindful
-    /// of the fact that every regex pattern given will be tested against every text input.
+    /// To specify multiple patterns, simply call the argument again with a new
+    /// pattern. Be mindful of the fact that every regex pattern given will
+    /// be tested against every text input.
     ///
-    /// e.g. clipvault --store --ignore-pattern '^<meta http-equiv=' --ignore-pattern 'ignore\n$'
+    /// e.g. clipvault --store --ignore-pattern '^<meta http-equiv='
+    /// --ignore-pattern 'ignore\n$'
     ///
-    /// Note that look-around and backreferences are not supported, as the Rust implementation
-    /// of a regex engine used does not support those features.
+    /// Note that look-around and backreferences are not supported, as the Rust
+    /// implementation of a regex engine used does not support those
+    /// features.
     #[arg(long, action, env = "CLIPVAULT_IGNORE_PATTERN", num_args = 1)]
     pub ignore_pattern: Option<Vec<Regex>>,
 }
@@ -137,8 +143,8 @@ pub struct GetDelArgs {
     pub input: String,
     /// The relative index of the desired entry (starting at 0). Negative
     /// values are interpreted as starting from the oldest entries first.
-    /// For example, 0 represents the newest entry, 1 the entry just before that,
-    /// and -1 represents the oldest entry.
+    /// For example, 0 represents the newest entry, 1 the entry just before
+    /// that, and -1 represents the oldest entry.
     ///
     /// *NOTE*: conflicts with positional input, and will ignore
     /// STDIN in the case where input is not provided.

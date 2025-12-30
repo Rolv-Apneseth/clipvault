@@ -1,5 +1,6 @@
-use dirs::{config_dir, data_local_dir};
 use std::{path::PathBuf, sync::LazyLock};
+
+use dirs::{config_dir, data_local_dir};
 
 pub static DB_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     data_local_dir()

@@ -1,39 +1,16 @@
-use std::{
-    io::{BufWriter, Cursor, Write, stdout},
-    path::Path,
-};
+use std::{io::{BufWriter, Write, stdout}, path::Path};
 
 use content_inspector::ContentType;
-use image::{DynamicImage, GenericImageView, ImageReader};
+use image::GenericImageView;
 use miette::{Context, IntoDiagnostic, Result};
-use mime_sniffer::MimeTypeSniffer;
 
 use super::SEPARATOR;
+use crate::{cli::ListArgs, database::{data::ClipboardEntry, init_db, queries::get_all_entries}, utils::{decode_image, get_mimetype, human_bytes, ignore_broken_pipe, truncate}};
 
-use crate::{
-    cli::ListArgs,
-    database::{init_db, queries::get_all_entries},
-    utils::{human_bytes, ignore_broken_pipe, truncate},
-};
-
-fn decode_image(data: &[u8]) -> Option<(&'static str, DynamicImage)> {
-    let img_reader = ImageReader::new(Cursor::new(data))
-        .with_guessed_format()
-        .ok()?;
-    let mimetype = img_reader.format()?.to_mime_type();
-    let img = img_reader.decode().ok()?;
-
-    Some((mimetype, img))
-}
-
-fn get_mimetype(data: &[u8]) -> Option<String> {
-    data.sniff_mime_type().map(String::from)
-}
-
-#[tracing::instrument(skip(data))]
-fn preview_text(data: &[u8], width: usize) -> String {
-    let mut result = String::with_capacity(data.len());
-    String::from_utf8_lossy(data)
+#[tracing::instrument()]
+fn preview_text(entry: &ClipboardEntry) -> String {
+    let mut result = String::with_capacity(entry.content.len());
+    String::from_utf8_lossy(&entry.content)
         .split_whitespace()
         .for_each(|w| {
             if !result.is_empty() {
@@ -42,44 +19,59 @@ fn preview_text(data: &[u8], width: usize) -> String {
             result.push_str(w);
         });
 
-    truncate(&result, width).into_owned()
+    result
 }
 
-#[tracing::instrument(skip(data))]
-fn preview_binary(data: &[u8], width: usize) -> String {
-    // Early return if data won't be visible in preview anyway
-    if width < "[[ binary data ".len() {
-        return truncate("[[ binary data ", width).into_owned();
-    };
-
+#[tracing::instrument()]
+fn preview_binary(entry: &ClipboardEntry) -> String {
     // Human readable representation of the byte count of the binary data
-    let byte_count = human_bytes(data.len());
+    let byte_count = human_bytes(entry.content_size);
 
-    // More details for image types
-    let result = if let Some((mimetype, img)) = decode_image(data) {
-        let (w, h) = img.dimensions();
-        format!("[[ binary data {byte_count} {mimetype} {w}x{h} ]]")
-    }
-    // Try and parse mime-type for other binary data
-    else if let Some(mimetype) = get_mimetype(data) {
-        format!("[[ binary data {byte_count} {mimetype} ]]")
-    } else {
-        format!("[[ binary data {byte_count} ]]")
+    let Some(mimetype) = entry.mimetype.as_ref() else {
+        return format!("[[ binary data {byte_count} ]]");
     };
 
-    truncate(&result, width).into_owned()
+    if let Some(extra_preview_data) = entry.extra_preview_data.as_ref() {
+        format!("[[ binary data {byte_count} {mimetype} {extra_preview_data} ]]")
+    } else {
+        format!("[[ binary data {byte_count} {mimetype} ]]")
+    }
 }
 
-#[tracing::instrument(skip(data))]
-fn preview(id: u64, data: &[u8], width: usize) -> String {
-    let data_type = content_inspector::inspect(data);
-    let s = match data_type {
-        ContentType::BINARY => preview_binary(data, width),
-        ContentType::UTF_8 | ContentType::UTF_8_BOM => preview_text(data, width),
-        _ => "[[ Non-UTF-8 text ]]".into(),
-    };
+#[tracing::instrument()]
+fn preview(mut entry: ClipboardEntry, width: usize) -> String {
+    // Fallback for entries created with clipvault v1.1.1 and older, which would not
+    // have some of the additional preview data stored in the DB
+    let content_type = entry.content_type.unwrap_or_else(|| {
+        let content_type = content_inspector::inspect(&entry.content);
+        entry.content_type = Some(content_type);
 
-    format!("{id}{SEPARATOR}{s}")
+        if content_type.is_binary() {
+            if let Some((img_mimetype, img)) = decode_image(&entry.content) {
+                let (w, h) = img.dimensions();
+                entry.extra_preview_data = Some(format!("{w}x{h}"));
+                entry.mimetype = Some(img_mimetype.into());
+            } else if let Some(content_mimetype) = get_mimetype(&entry.content) {
+                entry.mimetype = Some(content_mimetype);
+            }
+        }
+
+        content_type
+    });
+
+    let s = match content_type {
+        ContentType::BINARY => preview_binary(&entry),
+        ContentType::UTF_8 => preview_text(&entry),
+        ContentType::UTF_8_BOM => {
+            // Remove BOM so remaining data can be parsed as regular UTF-8
+            entry.content.drain(..3);
+            preview_text(&entry)
+        }
+        _ => String::from("[[ Non-UTF-8 text ]]"),
+    };
+    let truncated = truncate(s, width);
+
+    format!("{}{SEPARATOR}{truncated}", entry.id)
 }
 
 #[tracing::instrument(skip(path_db))]
@@ -120,7 +112,7 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
 
     for entry in entries
         .into_iter()
-        .map(|entry| preview(entry.id, &entry.content, preview_width))
+        .map(|entry| preview(entry, preview_width))
     {
         if show_output {
             writer

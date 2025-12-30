@@ -1,11 +1,5 @@
 use clap::Parser;
-
-use clipvault::{
-    cli::{Cli, Commands},
-    commands,
-    logging::{init_logging, trace_err},
-};
-
+use clipvault::{cli::{Cli, Commands}, commands, logging::{init_logging, trace_err}};
 use miette::{Context, IntoDiagnostic, Result};
 
 fn main() -> Result<()> {

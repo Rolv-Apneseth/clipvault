@@ -44,9 +44,9 @@ pretty_assertions = "1.4"
 assert_cmd = "2.1"
 predicates = "3.0"
 base64 = "0.22"
-tempfile = "3.23"
+tempfile = "3.24"
 proptest = "1.9"
-insta = "1.43"
+insta = "1.45"
 divan = { version = "4.1.0", package = "codspeed-divan-compat" }
 
 [[bench]]

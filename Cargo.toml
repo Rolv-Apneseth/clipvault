@@ -46,7 +46,7 @@ predicates = "3.0"
 base64 = "0.22"
 tempfile = "3.24"
 proptest = "1.9"
-insta = "1.45"
+insta = "1.46"
 divan = { version = "4.1.0", package = "codspeed-divan-compat" }
 
 [[bench]]

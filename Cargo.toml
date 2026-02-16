@@ -15,7 +15,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 # CLI args
 clap = { version = "4.5", features = ["derive", "env"] }
-argfile = { version = "0.2" }
+argfile = { version = "1.0" }
 dirs = { version = "6.0" }
 humantime = { version = "2.3" }
 
@@ -25,7 +25,7 @@ mime-sniffer = "0.1"
 content_inspector = "0.2"
 
 # Database
-rusqlite = { version = "0.37", features = ["bundled", "extra_check"] }
+rusqlite = { version = "0.38", features = ["bundled", "extra_check", "fallible_uint"] }
 rusqlite_migration = { version = "2.3", features = ["from-directory"] }
 include_dir = { version = "0.7" }
 

@@ -1,4 +1,4 @@
-use std::{io::{BufWriter, Write, stdout}, path::Path};
+use std::{borrow::Cow, io::{BufWriter, Write, stdout}, num::NonZero, path::Path, sync::{Arc, atomic::{AtomicUsize, Ordering}, mpsc::sync_channel}, thread};
 
 use content_inspector::ContentType;
 use image::GenericImageView;
@@ -32,10 +32,14 @@ fn preview_binary(entry: &ClipboardEntry) -> String {
 }
 
 #[tracing::instrument()]
-fn preview(mut entry: ClipboardEntry, width: usize) -> String {
+fn preview(entry: &ClipboardEntry, width: usize) -> String {
+    let mut entry = Cow::Borrowed(entry);
+
     // Fallback for entries created with clipvault v1.1.1 and older, which would not
     // have some of the additional preview data stored in the DB
     let content_type = entry.content_type.unwrap_or_else(|| {
+        let entry = entry.to_mut();
+
         let content_type = content_inspector::inspect(&entry.content);
         entry.content_type = Some(content_type);
 
@@ -52,17 +56,19 @@ fn preview(mut entry: ClipboardEntry, width: usize) -> String {
         content_type
     });
 
-    let s = match content_type {
-        ContentType::BINARY => preview_binary(&entry),
-        ContentType::UTF_8 => preview_text(&entry),
-        ContentType::UTF_8_BOM => {
-            // Remove BOM so remaining data can be parsed as regular UTF-8
-            entry.content.drain(..3);
-            preview_text(&entry)
-        }
-        _ => String::from("[[ Non-UTF-8 text ]]"),
-    };
-    let truncated = truncate(s, width);
+    let truncated = truncate(
+        match content_type {
+            ContentType::BINARY => preview_binary(entry.as_ref()),
+            ContentType::UTF_8 => preview_text(entry.as_ref()),
+            ContentType::UTF_8_BOM => {
+                // Remove BOM so remaining data can be parsed as regular UTF-8
+                entry.to_mut().content.drain(..3);
+                preview_text(&entry)
+            }
+            _ => String::from("[[ Non-UTF-8 text ]]"),
+        },
+        width,
+    );
 
     format!("{}{SEPARATOR}{truncated}", entry.id)
 }
@@ -97,33 +103,61 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
         return Ok(());
     }
 
+    // Use multiple threads to generate entry previews
+    let previews = thread::scope(move |s| {
+        let len = entries.len();
+        let (tx, rx) = sync_channel(len);
+        let data = Arc::new((AtomicUsize::new(0), entries));
+
+        let num_threads: usize = thread::available_parallelism()
+            .unwrap_or(NonZero::new(1).unwrap())
+            .into();
+
+        for _ in 0..num_threads {
+            let tx = tx.clone();
+            let data = Arc::clone(&data);
+            s.spawn(move || {
+                let (index, entries) = data.as_ref();
+                while let i = index.fetch_add(1, Ordering::Relaxed)
+                    && i < entries.len()
+                {
+                    tx.send((i, preview(&entries[i], preview_width).into_bytes()))
+                        .expect("channel shouldn't be closed");
+                }
+            });
+        }
+        drop(tx);
+
+        let mut output = vec![vec![]; len];
+        while let Ok((i, s)) = rx.recv() {
+            output[i] = s;
+        }
+        output
+    });
+
+    // Write previews to STDOUT
     let stdout = stdout();
     let stdout = stdout.lock();
+    let mut writer = BufWriter::with_capacity(12 * 1024, stdout);
 
-    // [`BufWriter`] for more efficient, buffered writes
-    let mut writer = BufWriter::with_capacity(8 * 1024, stdout);
+    for mut entry in previews {
+        entry.push(b'\n');
+        let entry = entry.as_slice();
 
-    for entry in entries
-        .into_iter()
-        .map(|entry| preview(entry, preview_width))
-    {
-        if show_output {
-            writer
-                .write(&entry.into_bytes())
-                .into_diagnostic()
-                .context("failed to write to STDOUT")?;
-            writer
-                .write(b"\n")
-                .into_diagnostic()
-                .context("failed to write to STDOUT")?;
+        if !show_output {
+            continue;
         }
+
+        writer
+            .write(entry)
+            .into_diagnostic()
+            .context("failed to write to STDOUT")?;
     }
 
+    // Flush all remaining output in the buffered writer
     ignore_broken_pipe(writer.flush())
         .into_diagnostic()
-        .context("failed to flush STDOUT")?;
-
-    Ok(())
+        .context("failed to flush STDOUT")
 }
 
 #[tracing::instrument(skip(path_db))]

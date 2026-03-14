@@ -2,7 +2,7 @@ use std::{io::{Read, stdin}, path::Path};
 
 use content_inspector::ContentType;
 use image::GenericImageView;
-use miette::{Context, IntoDiagnostic, Result, miette};
+use miette::{Context, IntoDiagnostic, Result, bail};
 use tracing::instrument;
 
 use crate::{cli::StoreArgs, database::{data::ClipboardEntry, init_db, queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry}}, utils::{decode_image, get_mimetype, now}};
@@ -26,9 +26,7 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
 
     // Min conflicts with max
     if min_bytes > max_bytes {
-        return Err(miette!(
-            "minimum entry length ({min_bytes}) exceeds maximum entry length ({max_bytes})"
-        ));
+        bail!("minimum entry length ({min_bytes}) exceeds maximum entry length ({max_bytes})")
     }
 
     // Set by `wl-clipboard`
@@ -63,14 +61,14 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
             .context("failed to read from STDIN")?;
         buf
     };
+    drop(source);
 
-    // No content to store
     if buf.is_empty() {
         tracing::trace!("no content to store");
         return Ok(());
     }
 
-    // Ignore content larger than the max size or smaller than the min size in bytes
+    // Ignore content outside of the min and max byte constraints
     let gt_max = buf.len() > max_bytes && max_bytes != 0;
     let lt_min = buf.len() < min_bytes;
     if gt_max || lt_min {
@@ -116,7 +114,7 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
         // Inspect the content type
         let content_type = content_inspector::inspect(&buf);
 
-        // Additional data for images and other binary data
+        // Store extra information for images and other binary data
         let (mut mimetype, mut extra_preview_data) = (None, None);
         if content_type.is_binary() {
             // Resolution and mimetype for images

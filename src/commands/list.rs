@@ -9,17 +9,10 @@ use crate::{cli::ListArgs, database::{data::ClipboardEntry, init_db, queries::ge
 
 #[tracing::instrument()]
 fn preview_text(entry: &ClipboardEntry) -> String {
-    let mut result = String::with_capacity(entry.content.len());
     String::from_utf8_lossy(&entry.content)
         .split_whitespace()
-        .for_each(|w| {
-            if !result.is_empty() {
-                result.push(' ');
-            }
-            result.push_str(w);
-        });
-
-    result
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 #[tracing::instrument()]

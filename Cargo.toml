@@ -35,7 +35,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = { version = "0.2" }
 
 # Misc
-unicode-segmentation = { version = "1.12" }        # Limit preview width by grapheme clusters
+unicode-segmentation = { version = "1.13" }        # Limit preview width by grapheme clusters
 miette = { version = "7.6", features = ["fancy"] } # Fancy errors
 regex = { version = "1.12" }                       # Support ignore patterns defined by the user
 
@@ -45,8 +45,8 @@ assert_cmd = "2.1"
 predicates = "3.0"
 base64 = "0.22"
 tempfile = "3.24"
-proptest = "1.9"
-insta = "1.46"
+proptest = "1.11"
+insta = "1.47"
 divan = { version = "4.1.0", package = "codspeed-divan-compat" }
 
 [features]

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0](https://github.com/Rolv-Apneseth/clipvault/compare/v1.1.1...v1.2.0) - 2026-05-02
+
+### Performance
+
+- improve list performance with multi-threading
+
+### Added
+
+- show byte count for any binary data
+
+### Fixed
+
+- spacing for binary data preview
+
 ## [1.1.1](https://github.com/Rolv-Apneseth/clipvault/compare/v1.1.0...v1.1.1) - 2025-12-14
 
 ### Performance

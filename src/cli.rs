@@ -89,7 +89,7 @@ pub struct StoreArgs {
     /// Note that look-around and backreferences are not supported, as the Rust
     /// implementation of a regex engine used does not support those
     /// features.
-    #[arg(long, action, env = "CLIPVAULT_IGNORE_PATTERN", num_args = 1)]
+    #[arg(long, env = "CLIPVAULT_IGNORE_PATTERN")]
     pub ignore_pattern: Option<Vec<Regex>>,
 }
 

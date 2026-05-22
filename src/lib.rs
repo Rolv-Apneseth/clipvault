@@ -4,3 +4,4 @@ pub mod database;
 pub mod defaults;
 pub mod logging;
 pub mod utils;
+pub mod wayland;

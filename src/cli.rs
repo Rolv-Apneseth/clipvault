@@ -91,6 +91,27 @@ pub struct StoreArgs {
     /// features.
     #[arg(long, env = "CLIPVAULT_IGNORE_PATTERN")]
     pub ignore_pattern: Option<Vec<Regex>>,
+
+    /// If the title or ID of the currently focused Wayland toplevel (window)
+    /// matches any of the given regex patterns, entries will not be stored.
+    ///
+    /// This will only work on a Wayland compositor with support for wlr
+    /// foreign toplevel management e.g. Sway, Niri, Wayfire, Hyprland, etc.
+    /// You can check for compositor support at
+    /// https://wayland.app/protocols/wlr-foreign-toplevel-management-unstable-v1#compositor-support
+    ///
+    /// To specify multiple patterns, simply call the argument again with a new
+    /// pattern. Be mindful of the fact that every regex pattern given will
+    /// be tested against every text input.
+    ///
+    /// e.g. clipvault --store --window-ignore-pattern '.*[pP]ass.*'
+    /// --window-ignore-pattern '^Bitwarden'
+    ///
+    /// Note that look-around and backreferences are not supported, as the Rust
+    /// implementation of a regex engine used does not support those
+    /// features.
+    #[arg(long, env = "CLIPVAULT_WINDOW_IGNORE_PATTERN")]
+    pub window_ignore_pattern: Option<Vec<Regex>>,
 }
 
 impl Default for StoreArgs {
@@ -103,6 +124,7 @@ impl Default for StoreArgs {
             min_entry_length: defaults::MIN_ENTRY_LEN,
             store_sensitive: false,
             ignore_pattern: None,
+            window_ignore_pattern: None,
         }
     }
 }

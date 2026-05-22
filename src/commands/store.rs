@@ -5,9 +5,9 @@ use image::GenericImageView;
 use miette::{Context, IntoDiagnostic, Result, bail};
 use tracing::instrument;
 
-use crate::{cli::StoreArgs, database::{data::ClipboardEntry, init_db, queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry}}, utils::{decode_image, get_mimetype, now}};
+use crate::{cli::StoreArgs, database::{data::ClipboardEntry, init_db, queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry}}, utils::{decode_image, get_mimetype, now}, wayland::wlr_toplevel::get_active_toplevel};
 
-#[instrument]
+#[instrument(skip(path_db, args))]
 pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {
     execute_with_source(path_db, args, stdin())
 }
@@ -22,6 +22,7 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
         min_entry_length: min_bytes,
         store_sensitive,
         ignore_pattern,
+        window_ignore_pattern,
     } = args;
 
     // Min conflicts with max
@@ -85,8 +86,9 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
         return Ok(());
     }
 
-    // Check user-provided ignore pattern
+    // Check user-provided ignore patterns
     if let Some(regexes) = ignore_pattern
+        && !regexes.is_empty()
         && matches!(
             content_inspector::inspect(&buf),
             ContentType::UTF_8 | ContentType::UTF_8_BOM
@@ -97,6 +99,33 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
     {
         tracing::debug!("content matched an ignore pattern");
         return Ok(());
+    }
+
+    // Check user-provided window ignore patterns
+    if let Some(regexes) = window_ignore_pattern
+        && !regexes.is_empty()
+    {
+        match get_active_toplevel() {
+            Ok(Some(active_top_window)) => {
+                let title = active_top_window
+                    .title
+                    .unwrap_or_else(|| String::from("[untitled]"));
+                let app_id = active_top_window
+                    .app_id
+                    .unwrap_or_else(|| String::from("[unknown]"));
+                let haystack = format!("{app_id}: {title}");
+
+                tracing::debug!("focused window: ({haystack})");
+                if regexes.iter().any(|re| re.is_match(&haystack)) {
+                    tracing::debug!("Focused window ({haystack}) matched an ignore pattern");
+                    return Ok(());
+                } else {
+                    tracing::trace!("Focused window ({haystack}) did not match any ignore pattern");
+                }
+            }
+            Ok(None) => tracing::warn!("No focused window found"),
+            Err(e) => tracing::error!("Failed to get the active toplevel: {e}"),
+        }
     }
 
     // Only get DB connection after parsing STDIN - avoid locking

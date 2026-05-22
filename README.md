@@ -28,6 +28,7 @@ In addition:
 - **Entry size limits**: configurable minimum and maximum size for stored entries
 - **Entry age limit:** configurable max age for entries - automatically remove old clipboard entries
 - **Ignore entries:** avoid storing certain text data using regex patterns, e.g. `^<meta http-equiv=`
+- **Ignore windows:** avoid storing data from specific windows using regex patterns, e.g. `.*Pass.*`
 - **Informative previews:** previews for binary data support many more types, e.g. `video/mp4`, `application/pdf`, etc.
 
 ## Requirements

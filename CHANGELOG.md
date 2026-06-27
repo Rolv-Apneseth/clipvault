@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0](https://github.com/Rolv-Apneseth/clipvault/compare/v1.2.0...v1.3.0) - 2026-06-27
+
+### Added
+
+- ignore entries based on the currently focused window
+
 ## [1.2.0](https://github.com/Rolv-Apneseth/clipvault/compare/v1.1.1...v1.2.0) - 2026-05-02
 
 ### Performance

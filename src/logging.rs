@@ -1,10 +1,23 @@
-use std::{fs::create_dir_all, path::PathBuf};
+use std::{
+    fs::create_dir_all,
+    path::PathBuf,
+};
 
 use dirs::state_dir;
-use miette::{Context, IntoDiagnostic, Result};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
 use tracing::level_filters::LevelFilter;
-use tracing_appender::{non_blocking::WorkerGuard, rolling::Rotation};
-use tracing_subscriber::{EnvFilter, prelude::*};
+use tracing_appender::{
+    non_blocking::WorkerGuard,
+    rolling::Rotation,
+};
+use tracing_subscriber::{
+    EnvFilter,
+    prelude::*,
+};
 
 fn get_logs_dir() -> Result<PathBuf> {
     let dir = state_dir()

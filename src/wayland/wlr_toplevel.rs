@@ -3,9 +3,21 @@
 
 use std::collections::HashMap;
 
-use miette::{Context, IntoDiagnostic, Result};
-use wayrs_client::{Connection, EventCtx};
-use wayrs_protocols::wlr_foreign_toplevel_management_unstable_v1::{ZwlrForeignToplevelHandleV1, ZwlrForeignToplevelManagerV1, zwlr_foreign_toplevel_handle_v1, zwlr_foreign_toplevel_manager_v1};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
+use wayrs_client::{
+    Connection,
+    EventCtx,
+};
+use wayrs_protocols::wlr_foreign_toplevel_management_unstable_v1::{
+    ZwlrForeignToplevelHandleV1,
+    ZwlrForeignToplevelManagerV1,
+    zwlr_foreign_toplevel_handle_v1,
+    zwlr_foreign_toplevel_manager_v1,
+};
 
 #[derive(Default)]
 struct ToplevelState {

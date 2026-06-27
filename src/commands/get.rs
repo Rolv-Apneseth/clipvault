@@ -1,9 +1,35 @@
-use std::{io::{Read, Write, stdin, stdout}, path::Path};
+use std::{
+    io::{
+        Read,
+        Write,
+        stdin,
+        stdout,
+    },
+    path::Path,
+};
 
-use miette::{Context, IntoDiagnostic, Result, miette};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+    miette,
+};
 
 use super::extract_id;
-use crate::{cli::GetDelArgs, commands::wrap_index, database::{data::ClipboardEntry, init_db, queries::{count_entries, get_entry_by_id, get_entry_by_position}}, utils::ignore_broken_pipe};
+use crate::{
+    cli::GetDelArgs,
+    commands::wrap_index,
+    database::{
+        data::ClipboardEntry,
+        init_db,
+        queries::{
+            count_entries,
+            get_entry_by_id,
+            get_entry_by_position,
+        },
+    },
+    utils::ignore_broken_pipe,
+};
 
 fn get_entry(path_db: &Path, mut input: String) -> Result<ClipboardEntry> {
     // Read from STDIN if no argument given

@@ -1,9 +1,35 @@
-use std::{io::BufRead, os::unix::fs::MetadataExt, sync::LazyLock, time::Duration};
+use std::{
+    io::BufRead,
+    os::unix::fs::MetadataExt,
+    sync::LazyLock,
+    time::Duration,
+};
 
-use assert_cmd::{Command, cargo_bin};
-use base64::{Engine, alphabet, engine::{self, GeneralPurposeConfig}};
-use clipvault::{database::init_db, utils::human_bytes};
-use predicates::{prelude::PredicateBooleanExt, str::{contains, is_empty}};
+use assert_cmd::{
+    Command,
+    cargo_bin,
+};
+use base64::{
+    Engine,
+    alphabet,
+    engine::{
+        GeneralPurposeConfig,
+        {
+            self,
+        },
+    },
+};
+use clipvault::{
+    database::init_db,
+    utils::human_bytes,
+};
+use predicates::{
+    prelude::PredicateBooleanExt,
+    str::{
+        contains,
+        is_empty,
+    },
+};
 use proptest::prelude::*;
 use tempfile::NamedTempFile;
 

@@ -1,6 +1,13 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{
+    path::PathBuf,
+    str::FromStr,
+};
 
-use clap::{Parser, Subcommand, ValueHint};
+use clap::{
+    Parser,
+    Subcommand,
+    ValueHint,
+};
 use regex::Regex;
 
 use crate::defaults;

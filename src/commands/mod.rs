@@ -4,7 +4,11 @@ pub mod get;
 pub mod list;
 pub mod store;
 
-use miette::{Context, IntoDiagnostic, Result};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
 
 pub(super) const SEPARATOR: &str = "\t";
 

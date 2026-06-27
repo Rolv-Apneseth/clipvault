@@ -1,6 +1,15 @@
-use std::{io::Cursor, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    io::Cursor,
+    time::{
+        SystemTime,
+        UNIX_EPOCH,
+    },
+};
 
-use image::{DynamicImage, ImageReader};
+use image::{
+    DynamicImage,
+    ImageReader,
+};
 use mime_sniffer::MimeTypeSniffer;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -144,7 +153,10 @@ mod test {
 
     #[test]
     fn test_ignore_broken_pipe() {
-        use std::io::{Error, ErrorKind};
+        use std::io::{
+            Error,
+            ErrorKind,
+        };
 
         assert!(ignore_broken_pipe(Err(Error::new(ErrorKind::NotFound, miette!("")))).is_err());
         assert!(

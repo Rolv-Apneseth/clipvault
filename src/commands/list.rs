@@ -1,11 +1,47 @@
-use std::{borrow::Cow, io::{BufWriter, Write, stdout}, num::NonZero, path::Path, sync::{Arc, atomic::{AtomicUsize, Ordering}, mpsc::sync_channel}, thread};
+use std::{
+    borrow::Cow,
+    io::{
+        BufWriter,
+        Write,
+        stdout,
+    },
+    num::NonZero,
+    path::Path,
+    sync::{
+        Arc,
+        atomic::{
+            AtomicUsize,
+            Ordering,
+        },
+        mpsc::sync_channel,
+    },
+    thread,
+};
 
 use content_inspector::ContentType;
 use image::GenericImageView;
-use miette::{Context, IntoDiagnostic, Result};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
 
 use super::SEPARATOR;
-use crate::{cli::ListArgs, database::{data::ClipboardEntry, init_db, queries::get_all_entries}, utils::{decode_image, get_mimetype, human_bytes, ignore_broken_pipe, truncate}};
+use crate::{
+    cli::ListArgs,
+    database::{
+        data::ClipboardEntry,
+        init_db,
+        queries::get_all_entries,
+    },
+    utils::{
+        decode_image,
+        get_mimetype,
+        human_bytes,
+        ignore_broken_pipe,
+        truncate,
+    },
+};
 
 #[tracing::instrument()]
 fn preview_text(entry: &ClipboardEntry) -> String {

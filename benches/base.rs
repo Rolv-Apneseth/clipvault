@@ -1,6 +1,21 @@
-use std::{io::Cursor, sync::LazyLock};
+use std::{
+    io::Cursor,
+    sync::LazyLock,
+};
 
-use clipvault::{cli::{GetDelArgs, ListArgs, StoreArgs}, commands::{get, list, store}, defaults};
+use clipvault::{
+    cli::{
+        GetDelArgs,
+        ListArgs,
+        StoreArgs,
+    },
+    commands::{
+        get,
+        list,
+        store,
+    },
+    defaults,
+};
 #[cfg(feature = "bench_mem")]
 use divan::AllocProfiler;
 use tempfile::NamedTempFile;

@@ -1,11 +1,40 @@
-use std::{io::{Read, stdin}, path::Path};
+use std::{
+    io::{
+        Read,
+        stdin,
+    },
+    path::Path,
+};
 
 use content_inspector::ContentType;
 use image::GenericImageView;
-use miette::{Context, IntoDiagnostic, Result, bail};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+    bail,
+};
 use tracing::instrument;
 
-use crate::{cli::StoreArgs, database::{data::ClipboardEntry, init_db, queries::{delete_all_entries, delete_entries_older_than, trim_entries, upsert_entry}}, utils::{decode_image, get_mimetype, now}, wayland::wlr_toplevel::get_active_toplevel};
+use crate::{
+    cli::StoreArgs,
+    database::{
+        data::ClipboardEntry,
+        init_db,
+        queries::{
+            delete_all_entries,
+            delete_entries_older_than,
+            trim_entries,
+            upsert_entry,
+        },
+    },
+    utils::{
+        decode_image,
+        get_mimetype,
+        now,
+    },
+    wayland::wlr_toplevel::get_active_toplevel,
+};
 
 #[instrument(skip(path_db, args))]
 pub fn execute(path_db: &Path, args: StoreArgs) -> Result<()> {

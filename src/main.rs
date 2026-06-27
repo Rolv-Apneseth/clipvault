@@ -1,6 +1,20 @@
 use clap::Parser;
-use clipvault::{cli::{Cli, Commands}, commands, logging::{init_logging, trace_err}};
-use miette::{Context, IntoDiagnostic, Result};
+use clipvault::{
+    cli::{
+        Cli,
+        Commands,
+    },
+    commands,
+    logging::{
+        init_logging,
+        trace_err,
+    },
+};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
 
 fn main() -> Result<()> {
     let _guard = init_logging()?;

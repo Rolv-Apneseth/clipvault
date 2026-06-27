@@ -1,9 +1,33 @@
-use std::{io::{Read, stdin}, path::Path};
+use std::{
+    io::{
+        Read,
+        stdin,
+    },
+    path::Path,
+};
 
-use miette::{Context, IntoDiagnostic, Result, miette};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+    miette,
+};
 
-use super::{extract_id, wrap_index};
-use crate::{cli::GetDelArgs, database::{init_db, queries::{count_entries, delete_entry_by_id, delete_entry_by_position}}};
+use super::{
+    extract_id,
+    wrap_index,
+};
+use crate::{
+    cli::GetDelArgs,
+    database::{
+        init_db,
+        queries::{
+            count_entries,
+            delete_entry_by_id,
+            delete_entry_by_position,
+        },
+    },
+};
 
 #[tracing::instrument(skip(path_db))]
 pub fn execute(path_db: &Path, args: GetDelArgs) -> Result<()> {

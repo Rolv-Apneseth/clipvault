@@ -1,7 +1,19 @@
-use miette::{Context, IntoDiagnostic, Result, miette};
-use rusqlite::{Connection, fallible_iterator::FallibleIterator, params};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+    miette,
+};
+use rusqlite::{
+    Connection,
+    fallible_iterator::FallibleIterator,
+    params,
+};
 
-use crate::{database::data::ClipboardEntry, utils::now};
+use crate::{
+    database::data::ClipboardEntry,
+    utils::now,
+};
 
 #[tracing::instrument(skip(conn))]
 pub fn count_entries(conn: &Connection) -> Result<usize> {

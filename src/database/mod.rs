@@ -1,7 +1,17 @@
-use std::{path::Path, sync::LazyLock};
+use std::{
+    path::Path,
+    sync::LazyLock,
+};
 
-use include_dir::{Dir, include_dir};
-use miette::{Context, IntoDiagnostic, Result};
+use include_dir::{
+    Dir,
+    include_dir,
+};
+use miette::{
+    Context,
+    IntoDiagnostic,
+    Result,
+};
 use rusqlite::Connection;
 use rusqlite_migration::Migrations;
 use tracing::instrument;

@@ -34,7 +34,7 @@ pub fn execute(path_db: &Path, args: GetDelArgs) -> Result<()> {
     let GetDelArgs { input, index } = args;
 
     assert!(
-        index.is_none() || index.is_some_and(|_| input.is_empty()),
+        index.is_none_or(|_| input.is_empty()),
         "conflicting relative index and input - only one of these should make it to this stage"
     );
 

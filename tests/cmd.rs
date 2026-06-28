@@ -484,6 +484,90 @@ fn test_db_shrinks() {
     );
 }
 
+#[test]
+fn test_list_fields() {
+    let db = &get_db();
+
+    let data = "test";
+    get_cmd(db)
+        .arg("store")
+        .write_stdin(data)
+        .assert()
+        .success();
+
+    // Default fields should be ID and preview
+    get_cmd(db).args(["list"]).assert().success().stdout(
+        contains("1")
+            .count(1)
+            .and(contains(data).count(1))
+            .and(contains("\t").count(1)),
+    );
+
+    // Correct number of fields
+    get_cmd(db)
+        .args(["list", "--fields", "last-updated"])
+        .assert()
+        .success()
+        .stdout(contains("\t").not());
+    get_cmd(db)
+        .args(["list", "--fields", "id,preview"])
+        .assert()
+        .success()
+        .stdout(contains("\t").count(1));
+    get_cmd(db)
+        .args(["list", "--fields", "num-bytes,id,preview"])
+        .assert()
+        .success()
+        .stdout(contains("\t").count(2));
+    get_cmd(db)
+        .args(["list", "--fields", "preview,num-bytes,last-updated,id"])
+        .assert()
+        .success()
+        .stdout(contains("\t").count(3));
+
+    // Fields give expected values
+    get_cmd(db)
+        .args(["list", "--fields=id"])
+        .assert()
+        .success()
+        .stdout(contains("1"));
+    get_cmd(db)
+        .args(["list", "--fields", "preview"])
+        .assert()
+        .success()
+        .stdout(contains(data));
+    get_cmd(db)
+        .args(["list", "--fields=num-bytes"])
+        .assert()
+        .success()
+        .stdout(contains(format!("{}B", data.len())));
+    get_cmd(db)
+        .args(["list", "--fields", "last-updated"])
+        .assert()
+        .success()
+        .stdout(contains("Z").and(contains("T")));
+
+    // Duplicate fields ignored
+    get_cmd(db)
+        .args(["list", "--fields=id,id,id"])
+        .assert()
+        .success()
+        .stdout(contains("\t").not());
+    get_cmd(db)
+        .args(["list", "--fields=id,last-updated,id,last-updated"])
+        .assert()
+        .success()
+        .stdout(contains("\t").count(1));
+
+    // No empty fields values
+    get_cmd(db).args(["list", "--fields"]).assert().failure();
+    get_cmd(db).args(["list", "--fields=''"]).assert().failure();
+    get_cmd(db)
+        .args(["list", "--fields", "''"])
+        .assert()
+        .failure();
+}
+
 // PROP TESTS
 /// Re-use DB for prop tests as it is not necessary for each one to have its
 /// own.

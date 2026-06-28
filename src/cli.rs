@@ -10,7 +10,10 @@ use clap::{
 };
 use regex::Regex;
 
-use crate::defaults;
+use crate::{
+    commands::list::ListField,
+    defaults,
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -152,6 +155,15 @@ pub struct ListArgs {
     /// Reverse the order of the list of returned entries (oldest first).
     #[arg(short, long, action, env = "CLIPVAULT_REVERSE_LIST")]
     pub reverse: bool,
+
+    #[arg(
+        short,
+        long,
+        default_value = "id,preview",
+        value_delimiter = ',',
+        env = "CLIPVAULT_LIST_FIELDS"
+    )]
+    pub fields: Vec<ListField>,
 }
 
 impl Default for ListArgs {
@@ -159,6 +171,7 @@ impl Default for ListArgs {
         Self {
             max_preview_width: defaults::MAX_PREVIEW_WIDTH,
             reverse: false,
+            fields: vec![ListField::Id, ListField::Preview],
         }
     }
 }

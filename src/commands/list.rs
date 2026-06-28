@@ -16,8 +16,13 @@ use std::{
         mpsc::sync_channel,
     },
     thread,
+    time::{
+        Duration,
+        SystemTime,
+    },
 };
 
+use clap::ValueEnum;
 use content_inspector::ContentType;
 use image::GenericImageView;
 use miette::{
@@ -42,6 +47,14 @@ use crate::{
         truncate,
     },
 };
+
+#[derive(Debug, Clone, clap::ValueEnum, PartialEq, Eq, Hash)]
+pub enum ListField {
+    Id,
+    Preview,
+    NumBytes,
+    LastUpdated,
+}
 
 #[tracing::instrument()]
 fn preview_text(entry: &ClipboardEntry) -> String {
@@ -68,8 +81,9 @@ fn preview_binary(entry: &ClipboardEntry) -> String {
 }
 
 #[tracing::instrument()]
-fn preview(entry: &ClipboardEntry, width: usize) -> String {
+fn output(entry: &ClipboardEntry, width: usize, fields: &[ListField]) -> String {
     let mut entry = Cow::Borrowed(entry);
+    let mut output = Vec::with_capacity(fields.len());
 
     // Fallback for entries created with clipvault v1.1.1 and older, which would not
     // have some of the additional preview data stored in the DB
@@ -92,21 +106,40 @@ fn preview(entry: &ClipboardEntry, width: usize) -> String {
         content_type
     });
 
-    let truncated = truncate(
-        match content_type {
-            ContentType::BINARY => preview_binary(entry.as_ref()),
-            ContentType::UTF_8 => preview_text(entry.as_ref()),
-            ContentType::UTF_8_BOM => {
-                // Remove BOM so remaining data can be parsed as regular UTF-8
-                entry.to_mut().content.drain(..3);
-                preview_text(&entry)
+    for field in fields {
+        match field {
+            ListField::Id => output.push(entry.id.to_string()),
+            ListField::NumBytes => output.push(human_bytes(entry.content_size)),
+            ListField::LastUpdated => output.push(
+                humantime::format_rfc3339_seconds(
+                    SystemTime::UNIX_EPOCH
+                        .checked_add(Duration::from_secs(entry.last_updated))
+                        .unwrap_or_else(|| {
+                            tracing::error!("last updated time too large - could not represent it as a SystemTime");
+                            SystemTime::UNIX_EPOCH
+                        })
+                )
+                .to_string(),
+            ),
+            ListField::Preview => {
+                output.push(truncate(
+                    match content_type {
+                        ContentType::BINARY => preview_binary(entry.as_ref()),
+                        ContentType::UTF_8 => preview_text(entry.as_ref()),
+                        ContentType::UTF_8_BOM => {
+                            // Remove BOM so remaining data can be parsed as regular UTF-8
+                            entry.to_mut().content.drain(..3);
+                            preview_text(&entry)
+                        }
+                        _ => String::from("[[ Non-UTF-8 text ]]"),
+                    },
+                    width,
+                ))
             }
-            _ => String::from("[[ Non-UTF-8 text ]]"),
-        },
-        width,
-    );
+        }
+    }
 
-    format!("{}{SEPARATOR}{truncated}", entry.id)
+    output.join(SEPARATOR)
 }
 
 #[tracing::instrument(skip(path_db))]
@@ -114,7 +147,24 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
     let ListArgs {
         max_preview_width,
         reverse,
+        fields,
     } = args;
+
+    // Filter out duplicate fields
+    let fields: Vec<ListField> = {
+        let mut unique = Vec::with_capacity(fields.len());
+        for field in fields.into_iter() {
+            if unique.contains(&field) {
+                tracing::warn!(
+                    "Ignoring duplicate field: {}",
+                    field.to_possible_value().unwrap_or_default().get_name()
+                );
+            } else {
+                unique.push(field);
+            }
+        }
+        unique
+    };
 
     let preview_width = if max_preview_width == 0 {
         tracing::debug!("preview width limit disabled");
@@ -152,12 +202,13 @@ fn execute_inner(path_db: &Path, args: ListArgs, show_output: bool) -> Result<()
         for _ in 0..num_threads {
             let tx = tx.clone();
             let data = Arc::clone(&data);
+            let fields = fields.clone();
             s.spawn(move || {
                 let (index, entries) = data.as_ref();
                 while let i = index.fetch_add(1, Ordering::Relaxed)
                     && i < entries.len()
                 {
-                    tx.send((i, preview(&entries[i], preview_width).into_bytes()))
+                    tx.send((i, output(&entries[i], preview_width, &fields).into_bytes()))
                         .expect("channel shouldn't be closed");
                 }
             });

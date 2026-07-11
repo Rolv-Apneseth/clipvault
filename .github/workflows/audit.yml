@@ -10,12 +10,15 @@ on:
       branches: ["main"]
 
 jobs:
-  security_audit:
+  audit_deps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
 
       - uses: taiki-e/install-action@cargo-audit
-
       - name: Audit
         run: cargo audit
+
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check bans licenses sources

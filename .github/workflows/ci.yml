@@ -51,10 +51,6 @@ jobs:
             - name: Check minimum Rust version
               run: cargo-msrv verify
 
-            - uses: taiki-e/install-action@cargo-deny
-            - name: Check dependencies
-              run: cargo deny check
-
             - uses: taiki-e/install-action@v2
               with:
                 tool: shellharden

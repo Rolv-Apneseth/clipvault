@@ -27,7 +27,8 @@ format:
 test: check format
     cargo test --all
     cargo msrv verify
-    cargo deny check
+    cargo audit
+    cargo deny check bans licenses sources
 
 # Build
 build: test

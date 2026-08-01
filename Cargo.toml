@@ -53,7 +53,7 @@ regex = { version = "1.12" }                       # Support ignore patterns def
 pretty_assertions = "1.4"
 assert_cmd = "2.2"
 predicates = "3.0"
-base64 = "0.22"
+base64 = "0.23"
 tempfile = "3.24"
 proptest = "1.11"
 insta = "1.47"

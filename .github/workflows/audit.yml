@@ -15,10 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: taiki-e/install-action@cargo-audit
-      - name: Audit
-        run: cargo audit
-
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          command: check bans licenses sources
+          command: check

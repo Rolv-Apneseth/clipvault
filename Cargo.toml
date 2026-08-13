@@ -49,6 +49,10 @@ unicode-segmentation = { version = "1.13" }        # Limit preview width by grap
 miette = { version = "7.6", features = ["fancy"] } # Fancy errors
 regex = { version = "1.12" }                       # Support ignore patterns defined by the user
 
+[patch.crates-io]
+wayrs-client = { git = "https://github.com/Rolv-Apneseth/wayrs.git", branch = "update_quick_xml" }
+wayrs-protocols = { git = "https://github.com/Rolv-Apneseth/wayrs.git", branch = "update_quick_xml" }
+
 [dev-dependencies]
 pretty_assertions = "1.4"
 assert_cmd = "2.2"

@@ -11,7 +11,7 @@ unmaintained = "none"
 
 [licenses]
 allow = [
-  "AGPL-3.0",
+  "AGPL-3.0-only",
   "Apache-2.0 WITH LLVM-exception",
   "Apache-2.0",
   "BSD-2-Clause",

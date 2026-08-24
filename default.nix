@@ -13,7 +13,7 @@ pkgs.rustPlatform.buildRustPackage rec {
     lockFile = ./Cargo.lock;
 # These are the output hashes of nix packaging for vendoring git dependencies.
 # They cannot be calculated during build time.
-# They make sure that packages/dependencies are resolver reproducibly.
+# They make sure that packages/dependencies are resolved reproducibly.
 # The hash needs to be adjusted with a new version of wayrs-client.
 # for debugging/ mismatches run "nix flake check --all-systems" or "nix build"
 # See https://nix.dev/manual/nix/2.34/language/advanced-attributes.html#adv-attr-outputHash

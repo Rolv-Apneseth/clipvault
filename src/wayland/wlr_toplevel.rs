@@ -65,8 +65,10 @@ fn handle_toplevel_events(ctx: EventCtx<ToplevelState, ZwlrForeignToplevelHandle
         // values (by grouping 4 u8 values) and try to find the Activated state (2).
         State(state_bytes) => {
             toplevel.is_focused = state_bytes
-                .chunks_exact(4)
-                .map(|b| u32::from_ne_bytes(b.try_into().expect("slice somehow not 4 bytes long")))
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|b| u32::from_ne_bytes(*b))
                 .any(|s| s == zwlr_foreign_toplevel_handle_v1::State::Activated as u32);
         }
         Closed => {

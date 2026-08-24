@@ -24,7 +24,7 @@ pkgs.rustPlatform.buildRustPackage rec {
   };
 #  WARNING: This is a hack to make the build work.
 #  It is required so the tests are working. They need a valid User home filesystem
-#  and tey will fail of executed from /nix/store
+#  and they will fail if executed from /nix/store
 #  It creates a build sandbox instead
   preCheck = ''
     export HOME="$TMPDIR/home"

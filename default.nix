@@ -24,7 +24,6 @@ pkgs.rustPlatform.buildRustPackage rec {
       "wayrs-client-1.3.1" = "sha256-9LnJnuUkE3M+7dqrfX4L7HEgBNrB4sbYXN0pVhCnNl4=";
     };
   };
-  #  WARNING: This is a hack to make the build work.
   #  It is required so the tests are working. They need a valid User home filesystem
   #  and they will fail if executed from /nix/store
   #  It creates a build sandbox instead

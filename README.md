@@ -57,6 +57,33 @@ cargo install --git https://github.com/rolv-apneseth/clipvault --locked
 paru -S clipvault
 ```
 
+### Nix flakes
+
+Add clipvault to your flake inputs:
+```nix
+inputs = {
+  matugen = {
+     url = "github:Rolv-Apneseth/clipvault";
+    # If you need a specific version:
+    ref = "refs/tags/v1.3.0";
+  };
+  # ...
+};
+```
+
+Then you can add it to your packages:
+```nix
+let
+  system = "x86_64-linux";
+  # OR: system = "aarch64-linux";
+in {
+  environment.systemPackages = with pkgs; [    
+    # ...
+    inputs.clipvault.packages.${system}.default
+  ];
+}
+```
+
 ### Manual
 
 1. Download the tarball for your computer's architecture (probably `x86_64`) from the [releases page](https://github.com/Rolv-Apneseth/clipvault/releases)

@@ -6,18 +6,19 @@
     systems.url = "github:nix-systems/default-linux";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    systems,
-  }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      systems,
+    }:
     let
       forAllSystems = nixpkgs.lib.genAttrs (import systems);
       pkgsFor = nixpkgs.legacyPackages;
     in
     {
       packages = forAllSystems (system: {
-        default = pkgsFor.${system}.callPackage ./. {};
+        default = pkgsFor.${system}.callPackage ./. { };
       });
     };
 }

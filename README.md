@@ -62,7 +62,7 @@ paru -S clipvault
 Add clipvault to your flake inputs:
 ```nix
 inputs = {
-  matugen = {
+  clipvault = {
      url = "github:Rolv-Apneseth/clipvault";
     # If you need a specific version:
     ref = "refs/tags/v1.3.0";

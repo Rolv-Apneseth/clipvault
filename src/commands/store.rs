@@ -56,7 +56,7 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
 
     // Min conflicts with max
     if min_bytes > max_bytes {
-        bail!("minimum entry length ({min_bytes}) exceeds maximum entry length ({max_bytes})")
+        bail!("minimum entry length ({min_bytes}) exceeds maximum entry length ({max_bytes})");
     }
 
     // Set by `wl-clipboard`

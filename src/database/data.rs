@@ -30,7 +30,8 @@ impl<'stmt> TryFrom<&Row<'stmt>> for ClipboardEntry {
                     // Stored entries from previous versions may not have this field defined
                     .get::<&str, Option<u8>>("content_type")?
                     .map(|n| {
-                        // TODO: remove once `content_inspector` has `from` implemented
+                        // TODO: remove once `content_inspector` has `from`
+                        // implemented
                         match n {
                             1 => ContentType::UTF_8,
                             2 => ContentType::UTF_8_BOM,

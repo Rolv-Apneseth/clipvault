@@ -85,8 +85,8 @@ fn output(entry: &ClipboardEntry, width: usize, fields: &[ListField]) -> String 
     let mut entry = Cow::Borrowed(entry);
     let mut output = Vec::with_capacity(fields.len());
 
-    // Fallback for entries created with clipvault v1.1.1 and older, which would not
-    // have some of the additional preview data stored in the DB
+    // Fallback for entries created with clipvault v1.1.1 and older, which would
+    // not have some of the additional preview data stored in the DB
     let content_type = entry.content_type.unwrap_or_else(|| {
         let entry = entry.to_mut();
 

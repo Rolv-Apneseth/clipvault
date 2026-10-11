@@ -60,6 +60,7 @@ paru -S clipvault
 ### Nix flakes
 
 Add clipvault to your flake inputs:
+
 ```nix
 inputs = {
   clipvault = {
@@ -72,6 +73,7 @@ inputs = {
 ```
 
 Then you can add it to your packages:
+
 ```nix
 let
   system = "x86_64-linux";
@@ -194,6 +196,12 @@ clipvault clear
 ```
 
 Alternatively, just delete the database file (default path can be found in `help` output).
+
+#### List entries with extra fields
+
+```sh
+clipvault list --fields='id,size,last-updated,preview'
+```
 
 #### Additional information
 

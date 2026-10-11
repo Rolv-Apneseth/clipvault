@@ -104,16 +104,24 @@ wl-paste --watch clipvault store
 This will listen for changes from the Wayland clipboard and write each entry to the history.
 Call it once per session - for example:
 
-- **Hyprland**:
+- **Niri**:
 
     ```conf
-    exec-once = wl-paste --watch clipvault store
+    spawn-sh-at-startup "wl-paste --watch clipvault store"
     ```
 
 - **Sway:**
 
     ```conf
     exec wl-paste --watch clipvault store
+    ```
+
+- **Hyprland**:
+
+    ```lua
+    hl.on("hyprland.start", function () 
+      hl.exec_cmd("wl-paste --watch clipvault store")
+    end)
     ```
 
 ### Filtering

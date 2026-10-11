@@ -20,12 +20,12 @@ Like `cliphist`:
 - **Simple:** no builtin picker, only pipes - keep it simple (stupid)
 - **Any data:** support for **text**, **images** and **any other** binary data
 - **Preservation:** entries are preserved byte-for-byte, including leading/trailing whitespace
+- **Entry size limits**: configurable minimum and maximum size for stored entries
 
 In addition:
 
 - **No silent failures:** invalid arguments cause errors, and are also written to log files
 - **Relative positions:** support for getting/deleting items by relative position in the saved history
-- **Entry size limits**: configurable minimum and maximum size for stored entries
 - **Entry age limit:** configurable max age for entries - automatically remove old clipboard entries
 - **Ignore entries:** avoid storing certain text data using regex patterns, e.g. `^<meta http-equiv=`
 - **Ignore windows:** avoid storing data from specific windows using regex patterns, e.g. `.*Pass.*`

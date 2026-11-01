@@ -61,8 +61,9 @@ fn handle_toplevel_events(ctx: EventCtx<ToplevelState, ZwlrForeignToplevelHandle
         AppId(app_id) => {
             toplevel.app_id = Some(String::from_utf8_lossy(app_id.as_bytes()).into_owned())
         }
-        // State flags are given as an array of packed u32 values. We loop over these
-        // values (by grouping 4 u8 values) and try to find the Activated state (2).
+        // State flags are given as an array of packed u32 values. We loop over
+        // these values (by grouping 4 u8 values) and try to find the Activated
+        // state (2).
         State(state_bytes) => {
             toplevel.is_focused = state_bytes
                 .as_chunks::<4>()

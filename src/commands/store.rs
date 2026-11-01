@@ -63,9 +63,10 @@ pub fn execute_with_source(path_db: &Path, args: StoreArgs, mut source: impl Rea
     if let Ok(s) = std::env::var("CLIPBOARD_STATE") {
         tracing::debug!("CLIPBOARD_STATE={s}");
         match s.as_str() {
-            // Clipboard contains a sensitive value - skip if not storing sensitive values
-            // As of writing, the latest release of `wl-clipboard` does not include the changes for
-            // marking sensitive values using x-kde-passwordManagerHint.
+            // Clipboard contains a sensitive value - skip if not storing
+            // sensitive values As of writing, the latest release of
+            // `wl-clipboard` does not include the changes for marking sensitive
+            // values using x-kde-passwordManagerHint.
             "sensitive" if !store_sensitive => {
                 tracing::trace!("sensitive - not storing");
                 return Ok(());

@@ -16,7 +16,7 @@ categories = ["command-line-utilities"]
 # CLI args
 clap = { version = "4.6", features = ["derive", "env"] }
 argfile = { version = "1.0" }
-dirs = { version = "6.0" }
+dirs = { version = "7.0" }
 humantime = { version = "2.3" }
 
 # Binary data

@@ -16,7 +16,7 @@ categories = ["command-line-utilities"]
 clap = { version = "4.6", features = ["derive", "env"] }
 argfile = { version = "1.0" }
 dirs = { version = "7.0" }
-humantime = { version = "2.3" }
+humantime = { version = "2.4" }
 
 # Binary data
 image = "0.25"
@@ -24,12 +24,12 @@ mime-sniffer = "0.1"
 content_inspector = "0.2"
 
 # Database
-rusqlite = { version = "0.38", features = [
+rusqlite = { version = "0.41", features = [
   "bundled",
   "extra_check",
   "fallible_uint",
 ] }
-rusqlite_migration = { version = "2.3", features = ["from-directory"] }
+rusqlite_migration = { version = "2.7", features = ["from-directory"] }
 include_dir = { version = "0.7" }
 
 # Logging
@@ -46,7 +46,7 @@ wayrs-protocols = { version = "0.14", features = [
 # Misc
 unicode-segmentation = { version = "1.13" }        # Limit preview width by grapheme clusters
 miette = { version = "7.6", features = ["fancy"] } # Fancy errors
-regex = { version = "1.12" }                       # Support ignore patterns defined by the user
+regex = { version = "1.13" }                       # Support ignore patterns defined by the user
 
 [patch.crates-io]
 wayrs-client = { git = "https://github.com/Rolv-Apneseth/wayrs.git", branch = "update_quick_xml" }
@@ -55,12 +55,12 @@ wayrs-protocols = { git = "https://github.com/Rolv-Apneseth/wayrs.git", branch =
 [dev-dependencies]
 pretty_assertions = "1.4"
 assert_cmd = "2.2"
-predicates = "3.0"
+predicates = "3.1"
 base64 = "0.23"
-tempfile = "3.24"
-proptest = "1.11"
-insta = "1.47"
-divan = { version = "4.1.0", package = "codspeed-divan-compat" }
+tempfile = "3.27"
+proptest = "1.12"
+insta = "1.49"
+divan = { version = "4.7.0", package = "codspeed-divan-compat" }
 
 [features]
 default = []

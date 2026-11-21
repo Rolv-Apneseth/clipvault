@@ -4,7 +4,6 @@ description = "Clipboard history manager for Wayland, inspired by cliphist"
 version = "1.3.0"
 edition = "2024"
 repository = "https://github.com/rolv-apneseth/clipvault"
-homepage = "https://github.com/rolv-apneseth/clipvault"
 authors = ["Rolv Apneseth <rolv.apneseth@gmail.com>"]
 rust-version = "1.88"
 license = "AGPL-3.0-only"
